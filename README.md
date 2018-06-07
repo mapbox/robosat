@@ -7,7 +7,7 @@
   <i>Berlin aerial imagery, segmentation mask, building outlines, simplified GeoJSON polygons</i>
 </p>
 
-<p align="center"><a href="https://travis-ci.com/mapbox/robosat"><img src="https://travis-ci.com/mapbox/robosat.svg?token=bB1pwxscyosgCFnSzzds&branch=master" /></a></p>
+<p align="center"><a href="https://travis-ci.org/mapbox/robosat"><img src="https://travis-ci.org/mapbox/robosat.svg?branch=master" /></a></p>
 
 
 ## Table of Contents
