@@ -1,0 +1,5 @@
+.env
+pth*
+__pycache__
+test
+data
