@@ -45,15 +45,14 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
     """Dataset to concate multiple input images stored in slippy map format.
     """
 
-    def __init__(self, inputs, input_transforms, target, target_transform):
+    def __init__(self, inputs, target, joint_transform=None):
         super().__init__()
 
-        # No-op transform needs to be expressed with identify function `id`
-        assert len(inputs) == len(input_transforms), "one transform per input directory"
-        assert len(inputs) > 0, "at least one input slippy map dataset to compose"
+        # No transformations in the `SlippyMapTiles` instead joint transformations in getitem
+        self.joint_transform = joint_transform
 
-        self.inputs = [SlippyMapTiles(inp, fn) for inp, fn in zip(inputs, input_transforms)]
-        self.target = SlippyMapTiles(target, target_transform)
+        self.inputs = [SlippyMapTiles(inp) for inp in inputs]
+        self.target = SlippyMapTiles(target)
 
         assert len(set([len(dataset) for dataset in self.inputs])) == 1, "same number of tiles in all inputs"
         assert len(self.target) == len(self.inputs[0]), "same number of tiles in inputs and target"
@@ -72,6 +71,9 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
 
         assert len(set(tiles)) == 1, "all images are for the same tile"
         assert tiles[0] == mask_tile, "image tile is the same as mask tile"
+
+        if self.joint_transform is not None:
+            images, mask = self.joint_transform(images, mask)
 
         return torch.cat(images, dim=0), mask, tiles
 

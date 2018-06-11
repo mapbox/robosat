@@ -1,10 +1,9 @@
 import unittest
 
 import torch
-from torchvision.transforms import ToTensor
+from robosat.transforms import JointCompose, JointTransform, ImageToTensor, MaskToTensor
 import mercantile
 
-from robosat.transforms import MaskToTensor
 from robosat.datasets import SlippyMapTiles, SlippyMapTilesConcatenation
 
 
@@ -33,23 +32,19 @@ class TestSlippyMapTiles(unittest.TestCase):
 class TestSlippyMapTilesConcatenation(unittest.TestCase):
     def test_len(self):
         inputs = ["tests/fixtures/images/"]
-        input_transforms = [ToTensor()]
-
         target = "tests/fixtures/labels/"
-        target_transform = MaskToTensor()
 
-        dataset = SlippyMapTilesConcatenation(inputs, input_transforms, target, target_transform)
+        transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
+        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
 
         self.assertEqual(len(dataset), 3)
 
     def test_getitem(self):
         inputs = ["tests/fixtures/images/"]
-        input_transforms = [ToTensor()]
-
         target = "tests/fixtures/labels/"
-        target_transform = MaskToTensor()
 
-        dataset = SlippyMapTilesConcatenation(inputs, input_transforms, target, target_transform)
+        transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
+        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
 
         images, mask, tiles = dataset[0]
         self.assertEqual(tiles[0], mercantile.Tile(69105, 105093, 18))
