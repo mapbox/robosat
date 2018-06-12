@@ -5,8 +5,6 @@ Guaranteed to implement `__len__`, and `__getitem__`.
 See: http://pytorch.org/docs/0.3.1/data.html
 '''
 
-import os
-
 import torch
 from PIL import Image
 import torch.utils.data
@@ -75,39 +73,7 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
         assert len(set(tiles)) == 1, 'all images are for the same tile'
         assert tiles[0] == mask_tile, 'image tile is the same as mask tile'
 
-        return (torch.cat(images, dim=0), mask, tiles)
-
-
-class ImageDirectory(torch.utils.data.Dataset):
-    '''Dataset to read images from a single directory.
-    '''
-
-    def __init__(self, root, transform=None):
-        '''Creates an `ImageDirectory` instance.
-
-        Args:
-          root: the base directory where images reside.
-          transform: the transformation to run on each image.
-        '''
-
-        super().__init__()
-
-        self.root = root
-        self.transform = transform
-        self.file_names = os.listdir(root)
-
-    def __len__(self):
-        return len(self.file_names)
-
-    def __getitem__(self, i):
-        name = self.file_names[i]
-        path = os.path.join(self.root, name)
-        image = Image.open(path).convert('RGB')
-
-        if self.transform is not None:
-            image = self.transform(image)
-
-        return image, name
+        return torch.cat(images, dim=0), mask, tiles
 
 
 # Todo: once we have the SlippyMapDataset this dataset should wrap
