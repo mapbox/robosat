@@ -8,7 +8,7 @@ import requests
 from PIL import Image
 from tqdm import tqdm
 
-from robosat.tiles import tiles_from_csv, fetch_image
+from robosat.geo.tiles import tiles_from_csv, fetch_image
 
 
 def add_parser(subparser):

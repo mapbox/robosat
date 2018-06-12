@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 import shapely.geometry
 
-from robosat.spatial.core import make_index, iou
+from robosat.geo.core import make_index, iou
 
 
 def add_parser(subparser):

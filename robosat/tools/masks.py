@@ -6,8 +6,8 @@ import numpy as np
 
 from PIL import Image
 
-from robosat.tiles import tiles_from_slippy_map
-from robosat.colors import make_palette
+from robosat.geo.tiles import tiles_from_slippy_map
+from robosat.utils.colors import make_palette
 
 
 def add_parser(subparser):

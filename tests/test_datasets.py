@@ -4,8 +4,8 @@ import torch
 from torchvision.transforms import ToTensor
 import mercantile
 
-from robosat.transforms import MaskToTensor
-from robosat.datasets import SlippyMapTiles, SlippyMapTilesConcatenation
+from robosat.model.transforms import MaskToTensor
+from robosat.model.datasets import SlippyMapTiles, SlippyMapTilesConcatenation
 
 
 class TestSlippyMapTiles(unittest.TestCase):

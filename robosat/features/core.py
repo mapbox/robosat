@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from robosat.tiles import pixel_to_location
+from robosat.geo.tiles import pixel_to_location
 
 
 def visualize(mask, path):

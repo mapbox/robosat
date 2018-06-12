@@ -15,9 +15,9 @@ from rasterio.features import rasterize
 from rasterio.warp import transform
 from supermercado import burntiles
 
-from robosat.config import load_config
-from robosat.colors import make_palette
-from robosat.tiles import tiles_from_csv
+from robosat.utils.config import load_config
+from robosat.utils.colors import make_palette
+from robosat.geo.tiles import tiles_from_csv
 
 
 def add_parser(subparser):
