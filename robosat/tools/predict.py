@@ -13,12 +13,12 @@ from torchvision.transforms import Compose, Normalize
 from tqdm import tqdm
 from PIL import Image
 
-from robosat.datasets import BufferedSlippyMapDirectory
-from robosat.unet import UNet
-from robosat.config import load_config
-from robosat.colors import continuous_palette_for_color
-from robosat.utils import seed_rngs
-from robosat.transforms import ConvertImageMode, ImageToTensor
+from robosat.model.datasets import BufferedSlippyMapDirectory
+from robosat.model.transforms import ConvertImageMode, ImageToTensor
+from robosat.model.unet import UNet
+from robosat.utils.config import load_config
+from robosat.utils.colors import continuous_palette_for_color
+from robosat.utils.core import seed_rngs
 
 
 def add_parser(subparser):

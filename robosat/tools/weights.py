@@ -8,11 +8,11 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from robosat.config import load_config
-from robosat.datasets import SlippyMapTiles
-from robosat.samplers import RandomSubsetSampler
-from robosat.utils import seed_rngs
-from robosat.transforms import ConvertImageMode, MaskToTensor
+from robosat.utils.core import seed_rngs
+from robosat.utils.config import load_config
+from robosat.model.datasets import SlippyMapTiles
+from robosat.model.samplers import RandomSubsetSampler
+from robosat.model.transforms import ConvertImageMode, MaskToTensor
 
 
 def add_parser(subparser):

@@ -15,12 +15,12 @@ import requests
 from PIL import Image
 from flask import Flask, send_file, render_template, abort
 
-from robosat.tiles import fetch_image
-from robosat.unet import UNet
-from robosat.config import load_config
-from robosat.colors import make_palette
-from robosat.utils import seed_rngs
-from robosat.transforms import ConvertImageMode, ImageToTensor
+from robosat.geo.tiles import fetch_image
+from robosat.utils.config import load_config
+from robosat.utils.colors import make_palette
+from robosat.utils.core import seed_rngs
+from robosat.model.unet import UNet
+from robosat.model.transforms import ConvertImageMode, ImageToTensor
 
 '''
 Simple tile server running a segmentation model on the fly.

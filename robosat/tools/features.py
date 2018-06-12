@@ -5,8 +5,8 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from robosat.tiles import tiles_from_slippy_map
-from robosat.config import load_config
+from robosat.geo.tiles import tiles_from_slippy_map
+from robosat.utils.config import load_config
 
 from robosat.features.parking import ParkingHandler
 

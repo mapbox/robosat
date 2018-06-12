@@ -5,7 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 import numpy as np
 
-from robosat.tiles import tiles_from_slippy_map
+from robosat.geo.tiles import tiles_from_slippy_map
 
 
 def add_parser(subparser):

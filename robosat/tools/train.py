@@ -15,15 +15,14 @@ from torchvision.transforms import Compose, Resize, CenterCrop, Normalize
 
 from tqdm import tqdm
 
-from robosat.transforms import MaskToTensor, ConvertImageMode, ImageToTensor
-from robosat.datasets import SlippyMapTilesConcatenation
-from robosat.metrics import MeanIoU
-from robosat.losses import CrossEntropyLoss2d
-from robosat.unet import UNet
-from robosat.utils import plot
-from robosat.config import load_config
-from robosat.utils import seed_rngs
-from robosat.samplers import RandomSubsetSampler
+from robosat.model.transforms import MaskToTensor, ConvertImageMode, ImageToTensor
+from robosat.model.datasets import SlippyMapTilesConcatenation
+from robosat.model.metrics import MeanIoU
+from robosat.model.losses import CrossEntropyLoss2d
+from robosat.model.unet import UNet
+from robosat.model.samplers import RandomSubsetSampler
+from robosat.utils.core import plot, seed_rngs
+from robosat.utils.config import load_config
 
 
 def add_parser(subparser):

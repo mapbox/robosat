@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 import torch.utils.data
 
-from robosat.tiles import tiles_from_slippy_map, buffer_tile_image
+from robosat.geo.tiles import tiles_from_slippy_map, buffer_tile_image
 
 
 # Single Slippy Map directory structure

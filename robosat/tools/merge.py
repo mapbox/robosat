@@ -5,7 +5,7 @@ import geojson
 
 import shapely.geometry
 
-from robosat.spatial.core import make_index, project, union
+from robosat.geo.core import make_index, project, union
 from robosat.graph.core import UndirectedGraph
 
 
