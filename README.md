@@ -100,6 +100,8 @@ Also see the sub-command help available via
     ./rs --help
     ./rs <tool> --help
 
+Most tools take a dataset or model configuration file. See examples in the [`configs`](./config) directory.
+
 
 ### rs extract
 
