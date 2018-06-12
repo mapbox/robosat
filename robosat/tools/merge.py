@@ -65,7 +65,10 @@ def main(args):
         merged = unbuffered(union(embiggened))
 
         if merged.is_valid:
-            feature = geojson.Feature(geometry=shapely.geometry.mapping(merged))
+            # equal-area projection; round to full m^2, we're not that precise anyway
+            area = int(round(project(merged, "epsg:4326", "esri:54009").area))
+
+            feature = geojson.Feature(geometry=shapely.geometry.mapping(merged), properties={"area": area})
             features.append(feature)
         else:
             print("Warning: merged feature is not valid, skipping", file=sys.stderr)
