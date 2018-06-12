@@ -72,7 +72,7 @@ afterMap.on('load', function() {
     'source': {
       'type': 'raster',
       'tiles': [ 'http://127.0.0.1:5000/{z}/{x}/{y}.png' ],
-      'tileSize': 512
+      'tileSize': {{ size }}
     }
   });
 

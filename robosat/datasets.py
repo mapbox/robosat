@@ -82,13 +82,12 @@ class BufferedSlippyMapDirectory(torch.utils.data.Dataset):
     '''Dataset for buffered slippy map tiles with overlap.
     '''
 
-    width, height = 512, 512
-
-    def __init__(self, root, transform=None, overlap=32):
+    def __init__(self, root, transform=None, size=512, overlap=32):
         '''
         Args:
           root: the slippy map directory root with a `z/x/y.png` sub-structure.
           transform: the transformation to run on the buffered tile.
+          size: the Slippy Map tile size in pixels
           overlap: the tile border to add on every side; in pixel.
 
         Note:
@@ -99,9 +98,11 @@ class BufferedSlippyMapDirectory(torch.utils.data.Dataset):
 
         super().__init__()
 
-        assert self.width == self.height, 'tiles are quadratic'
+        assert overlap >= 0
+        assert size >= 256
 
         self.transform = transform
+        self.size = size
         self.overlap = overlap
         self.tiles = list(tiles_from_slippy_map(root))
 
@@ -110,7 +111,7 @@ class BufferedSlippyMapDirectory(torch.utils.data.Dataset):
 
     def __getitem__(self, i):
         tile, path = self.tiles[i]
-        image = buffer_tile_image(tile, self.tiles, overlap=self.overlap, tile_size=self.width)
+        image = buffer_tile_image(tile, self.tiles, overlap=self.overlap, tile_size=self.size)
 
         if self.transform is not None:
             image = self.transform(image)

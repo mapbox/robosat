@@ -39,11 +39,12 @@ session = None
 predictor = None
 tiles = None
 token = None
+size = None
 
 
 @app.route('/')
 def index():
-    return render_template('map.html', token=token)
+    return render_template('map.html', token=token, size=size)
 
 
 @app.route('/<int:z>/<int:x>/<int:y>.png')
@@ -84,6 +85,7 @@ def add_parser(subparser):
 
     parser.add_argument('--url', type=str, help='endpoint with {z}/{x}/{y} variables to fetch image tiles from')
     parser.add_argument('--checkpoint', type=str, required=True, help='model checkpoint to load')
+    parser.add_argument('--tile_size', type=int, default=512, help='tile size for slippy map tiles')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='host to serve on')
     parser.add_argument('--port', type=int, default=5000, help='port to serve on')
 
@@ -98,6 +100,9 @@ def main(args):
 
     if cuda and not torch.cuda.is_available():
         sys.exit('Error: CUDA requested but not available')
+
+    global size
+    size = args.size
 
     global token
     token = os.getenv('MAPBOX_ACCESS_TOKEN')
