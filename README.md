@@ -47,25 +47,30 @@ Features can be anything visually distinguishable in the imagery for example: bu
 Have a look at [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/44145) where we first introduced RoboSat and show some results.
 
 The tools RoboSat comes with can be categorized as follows:
-- pre-processing: preparing a dataset for training feature extraction models
-- modelling: training segmentation models for feature extraction in images
+- data preparation: creating a dataset for training feature extraction models
+- training and modeling: segmentation models for feature extraction in images
 - post-processing: turning segmentation results into cleaned and simple geometries
 
 Tools work with the [Slippy Map](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) tile format to abstract away geo-referenced imagery behind tiles of the same size.
 
-The pre-processing tools help you with getting started creating a dataset for training feature extraction models.
+![](./assets/pipeline-01.png)
+
+The data preparation tools help you with getting started creating a dataset for training feature extraction models.
 Such a dataset consists of aerial or satellite imagery and corresponding masks for the features you want to extract.
 We provide convenient tools to automatically create these datasets downloading aerial imagery from the [Mapbox](mapbox.com) Maps API and generating masks from [OpenStreetMap](openstreetmap.org) geometries but we are not bound to these sources.
+
+![](./assets/pipeline-02.png)
 
 The modelling tools help you with training fully convolutional neural nets for segmentation.
 We recommend using (potentially multiple) GPUs for these tools: we are running RoboSat on AWS p2/p3 instances and GTX 1080 TI GPUs.
 After you trained a model you can save its checkpoint and run prediction either on GPUs or CPUs.
 
+![](./assets/pipeline-03.png)
+
 The post-processing tools help you with cleaning up the segmentation model's results.
 They are responsible for denoising, simplifying geometries, transforming from pixels in Slippy Map tiles to world coordinates (GeoJSON features), and properly handling tile boundaries.
 
 If this sounds almost like what you need, see the [extending section](#extending) for more details about extending RoboSat.
-
 If you want to contribute, see the [contributing section](#contributing) for more details about getting involved with RoboSat.
 
 
