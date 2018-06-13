@@ -22,8 +22,12 @@ def main(args):
         features = json.load(f)
 
     tiles = []
+
     for feature in tqdm(features['features'], ascii=True, unit='feature'):
         tiles.extend(burntiles.burn([feature], args.zoom))
+
+    # tiles can overlap for multiple features; unique tile ids
+    tiles = list(set(tiles))
 
     with open(args.out, 'w') as fp:
         writer = csv.writer(fp)
