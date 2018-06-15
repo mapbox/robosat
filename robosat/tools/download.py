@@ -54,8 +54,11 @@ def main(args):
                 if not res:
                     return tile, False
 
-                image = Image.open(res)
-                image.save(path, optimize=True)
+                try:
+                    image = Image.open(res)
+                    image.save(path, optimize=True)
+                except OSError:
+                    return tile, False
 
                 tock = time.monotonic()
 
