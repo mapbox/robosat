@@ -24,7 +24,7 @@ def main(args):
     tiles = []
 
     for feature in tqdm(features['features'], ascii=True, unit='feature'):
-        tiles.extend(burntiles.burn([feature], args.zoom))
+        tiles.extend(map(tuple, burntiles.burn([feature], args.zoom).tolist()))
 
     # tiles can overlap for multiple features; unique tile ids
     tiles = list(set(tiles))
