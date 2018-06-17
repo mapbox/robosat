@@ -8,6 +8,7 @@ from robosat.tools import (
     dedupe,
     download,
     extract,
+    export,
     features,
     masks,
     merge,
@@ -32,6 +33,7 @@ def add_parsers():
     rasterize.add_parser(subparser)
 
     train.add_parser(subparser)
+    export.add_parser(subparser)
     predict.add_parser(subparser)
     masks.add_parser(subparser)
     features.add_parser(subparser)

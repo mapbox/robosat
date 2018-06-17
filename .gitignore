@@ -1,5 +1,8 @@
 .env
-pth*
+.python-version
 __pycache__
 test
 data
+
+*.pth
+*.pb

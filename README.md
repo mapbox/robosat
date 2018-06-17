@@ -20,6 +20,7 @@
     - [download](#rs-download)
     - [rasterize](#rs-rasterize)
     - [train](#rs-train)
+    - [export](#rs-export)
     - [predict](#rs-predict)
     - [mask](#rs-mask)
     - [features](#rs-features)
@@ -175,6 +176,15 @@ Before you can start training you need the following.
 - You need to add the path to the dataset's directory and the calculated class weights and statistics to the dataset config.
 
 Note: If you run `rs train` in an environment without X11 you need to set `export MPLBACKEND="agg"` for charts, see [the matplotlib docs](https://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server).
+
+
+### rs export
+
+Exports a trained model in [ONNX](https://onnx.ai/) format for prediction across different backends (like Caffe2, TensorFlow).
+
+The result of `rs export` is an ONNX GraphProto `.pb` file which can be used with the ONNX ecosystem.
+
+Note: the `rs predict` tool works with `.pth` checkpoints. In contrast to these `.pth` checkpoints the ONNX models neither depent on PyTorch or the Python code for the model class and can be used e.g. in resource constrained environments like AWS Lambda.
 
 
 ### rs predict

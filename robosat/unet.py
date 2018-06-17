@@ -89,6 +89,8 @@ class UNet(nn.Module):
 
         super().__init__()
 
+        # Todo: make input channels configurable, not hard-coded to three channels for RGB
+
         self.resnet = resnet50(pretrained=pretrained)
 
         self.enc0 = nn.Sequential(self.resnet.conv1, self.resnet.bn1, self.resnet.relu, self.resnet.maxpool)
