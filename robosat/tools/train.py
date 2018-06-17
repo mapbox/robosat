@@ -150,6 +150,8 @@ def train(loader, num_classes, device, net, optimizer, scheduler, criterion):
             prediction = output.data.max(0)[1].cpu().numpy()
             iou.add(mask.ravel(), prediction.ravel())
 
+    assert num_samples > 0, 'dataset contains training images and labels'
+
     return {'loss': running_loss / num_samples, 'iou': iou.get()}
 
 
@@ -182,6 +184,8 @@ def validate(loader, num_classes, device, net, criterion):
             mask = mask.data.cpu().numpy()
             prediction = output.data.max(0)[1].cpu().numpy()
             iou.add(mask.ravel(), prediction.ravel())
+
+    assert num_samples > 0, 'dataset contains validation images and labels'
 
     return {'loss': running_loss / num_samples, 'iou': iou.get()}
 
