@@ -19,7 +19,6 @@ from robosat.tiles import fetch_image
 from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import make_palette
-from robosat.utils import seed_rngs
 from robosat.transforms import ConvertImageMode, ImageToTensor
 
 '''
@@ -85,7 +84,6 @@ def add_parser(subparser):
 
     parser.add_argument('--url', type=str, help='endpoint with {z}/{x}/{y} variables to fetch image tiles from')
     parser.add_argument('--checkpoint', type=str, required=True, help='model checkpoint to load')
-    parser.add_argument('--seed', type=int, default=0, help='seed for random number generators')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='host to serve on')
     parser.add_argument('--port', type=int, default=5000, help='port to serve on')
 
@@ -93,8 +91,6 @@ def add_parser(subparser):
 
 
 def main(args):
-    seed_rngs(args.seed)
-
     model = load_config(args.model)
     dataset = load_config(args.dataset)
 

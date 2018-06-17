@@ -17,7 +17,6 @@ from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import continuous_palette_for_color
-from robosat.utils import seed_rngs
 from robosat.transforms import ConvertImageMode, ImageToTensor
 
 
@@ -28,7 +27,6 @@ def add_parser(subparser):
     parser.add_argument('--batch_size', type=int, default=1, help='images per batch')
     parser.add_argument('--checkpoint', type=str, required=True, help='model checkpoint to load')
     parser.add_argument('--overlap', type=int, default=32, help='tile pixel overlap to predict on')
-    parser.add_argument('--seed', type=int, default=0, help='seed for random number generators')
     parser.add_argument('--workers', type=int, default=1, help='number of workers pre-processing images')
     parser.add_argument('tiles', type=str, help='directory to read slippy map image tiles from')
     parser.add_argument('probs', type=str, help='directory to save slippy map probability masks to')
@@ -39,8 +37,6 @@ def add_parser(subparser):
 
 
 def main(args):
-    seed_rngs(args.seed)
-
     model = load_config(args.model)
     dataset = load_config(args.dataset)
 

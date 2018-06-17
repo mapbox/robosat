@@ -22,8 +22,6 @@ from robosat.losses import CrossEntropyLoss2d
 from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
-from robosat.utils import seed_rngs
-from robosat.samplers import RandomSubsetSampler
 
 
 def add_parser(subparser):
@@ -33,14 +31,11 @@ def add_parser(subparser):
     parser.add_argument('--model', type=str, required=True, help='path to model configuration file')
     parser.add_argument('--dataset', type=str, required=True, help='path to dataset configuration file')
     parser.add_argument('--resume', type=str, required=False, help='checkpoint to resume training from')
-    parser.add_argument('--seed', type=int, default=0, help='seed for random number generators')
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    seed_rngs(args.seed)
-
     model = load_config(args.model)
     dataset = load_config(args.dataset)
 
@@ -222,10 +217,7 @@ def get_dataset_loaders(model, dataset):
         os.path.join(path, 'validation', 'labels'),
         target_transform)
 
-    train_sampler = RandomSubsetSampler(train_dataset, dataset['samples']['training'])
-    val_sampler = RandomSubsetSampler(val_dataset, dataset['samples']['validation'])
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, sampler=val_sampler, drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, drop_last=True)
 
     return train_loader, val_loader

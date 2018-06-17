@@ -27,9 +27,3 @@
 # Note: use `./rs weights -h` to compute these for new datasets.
 [weights]
   values = [1.6248, 5.762827]
-
-
-# Subset of dataset for model training and validation.
-[samples]
-  training = 20000
-  validation = 2000

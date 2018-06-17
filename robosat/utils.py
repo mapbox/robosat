@@ -1,7 +1,3 @@
-import random
-
-import numpy as np
-import torch
 import matplotlib.pyplot as plt
 
 
@@ -21,9 +17,3 @@ def plot(out, history):
 
     plt.savefig(out, format='png')
     plt.close()
-
-
-def seed_rngs(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)

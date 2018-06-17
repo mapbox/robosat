@@ -10,23 +10,18 @@ from torchvision.transforms import Compose
 
 from robosat.config import load_config
 from robosat.datasets import SlippyMapTiles
-from robosat.samplers import RandomSubsetSampler
 from robosat.transforms import ConvertImageMode, ImageToTensor
-from robosat.utils import seed_rngs
 
 
 def add_parser(subparser):
     parser = subparser.add_parser('stats', help='computes mean and std dev on dataset',
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dataset', type=str, required=True, help='path to dataset configuration file')
-    parser.add_argument('--seed', type=int, default=0, help='seed for random number generators')
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    seed_rngs(args.seed)
-
     dataset = load_config(args.dataset)
     path = dataset['common']['dataset']
 
@@ -36,12 +31,11 @@ def main(args):
     ])
 
     train_dataset = SlippyMapTiles(os.path.join(path, 'training', 'images'), transform=train_transform)
-    train_sampler = RandomSubsetSampler(train_dataset, dataset['samples']['training'])
 
     n = 0
     mean = np.zeros(3, dtype=np.float64)
 
-    loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=1)
+    loader = DataLoader(train_dataset, batch_size=1)
     for images, tile in tqdm(loader, desc='Loading', unit='image', ascii=True):
         image = torch.squeeze(images)
         assert image.size(0) == 3, 'channel first'
@@ -57,7 +51,7 @@ def main(args):
 
     std = np.zeros(3, dtype=np.float64)
 
-    loader = DataLoader(train_dataset, sampler=train_sampler, batch_size=1)
+    loader = DataLoader(train_dataset, batch_size=1)
     for images, tile in tqdm(loader, desc='Loading', unit='image', ascii=True):
         image = torch.squeeze(images)
         assert image.size(0) == 3, 'channel first'
