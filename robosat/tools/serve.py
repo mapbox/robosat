@@ -150,7 +150,7 @@ class Predictor:
     def segment(self, image):
         # don't track tensors with autograd during prediction
         with torch.no_grad():
-            mean, std = self.dataset["stats"]["mean"], self.dataset["stats"]["std"]
+            mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
             transform = Compose([ConvertImageMode(mode="RGB"), ImageToTensor(), Normalize(mean=mean, std=std)])
             image = transform(image)

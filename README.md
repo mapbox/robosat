@@ -27,7 +27,6 @@
     - [dedupe](#rs-dedupe)
     - [serve](#rs-serve)
     - [weights](#rs-weights)
-    - [stats](#rs-stats)
     - [compare](#rs-compare)
     - [subset](#rs-subset)
 4. [Extending](#extending)
@@ -173,9 +172,7 @@ Before you can start training you need the following.
 
 - You need to calculate label class weights with `rs weights` on the training set's labels
 
-- You need to calculate mean and std dev with `rs stats` on the training set's images
-
-- Finally you need to add the path to the dataset's directory and the calculated class weights and statistics to the dataset config.
+- You need to add the path to the dataset's directory and the calculated class weights and statistics to the dataset config.
 
 Note: If you run `rs train` in an environment without X11 you need to set `export MPLBACKEND="agg"` for charts, see [the matplotlib docs](https://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server).
 
@@ -244,15 +241,6 @@ Calculates class weights for a Slippy Map directory with masks.
 The result of `rs weights` is a list of class weights useful for `rs train` to adjust the loss based on the class distribution in the masks.
 
 The `rs weights` tool computes the pixel-wise class distribution on the training dataset's masks and outputs weights for training.
-
-
-### rs stats
-
-Calculates statistics for a Slippy Map directory with aerial or satellite images.
-
-The result of `rs stats` is a tuple of mean and std dev useful for `rs train` to normalize the input images.
-
-The `rs stats` tool computes the channel-wise mean and std dev on the training dataset's images and outputs statistics for training.
 
 
 ### rs compare

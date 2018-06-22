@@ -30,7 +30,7 @@ def add_parser(subparser):
     parser.add_argument("--batch_size", type=int, default=1, help="images per batch")
     parser.add_argument("--checkpoint", type=str, required=True, help="model checkpoint to load")
     parser.add_argument("--overlap", type=int, default=32, help="tile pixel overlap to predict on")
-    parser.add_argument("--tile_size", type=int, default=512, help="tile size for slippy map tiles")
+    parser.add_argument("--tile_size", type=int, required=True, help="tile size for slippy map tiles")
     parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
     parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
@@ -68,13 +68,9 @@ def main(args):
     net.load_state_dict(chkpt)
     net.eval()
 
-    transform = Compose(
-        [
-            ConvertImageMode(mode="RGB"),
-            ImageToTensor(),
-            Normalize(mean=dataset["stats"]["mean"], std=dataset["stats"]["std"]),
-        ]
-    )
+    mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+
+    transform = Compose([ConvertImageMode(mode="RGB"), ImageToTensor(), Normalize(mean=mean, std=std)])
 
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
     loader = DataLoader(directory, batch_size=args.batch_size)
