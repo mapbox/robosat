@@ -4,6 +4,7 @@ import argparse
 
 import numpy as np
 
+from tqdm import tqdm
 from PIL import Image
 
 from robosat.tiles import tiles_from_slippy_map
@@ -27,7 +28,7 @@ def main(args):
 
     tilesets = map(tiles_from_slippy_map, args.probs)
 
-    for tileset in zip(*tilesets):
+    for tileset in tqdm(list(zip(*tilesets)), desc='Masks', unit='tile', ascii=True):
         tiles = [tile for tile, _ in tileset]
         paths = [path for _, path in tileset]
 
