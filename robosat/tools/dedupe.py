@@ -41,7 +41,7 @@ def main(args):
     idx = make_index(osm_shapes)
     features = []
 
-    for predicted_shape in tqdm(predicted_shapes, desc='Dedupe', unit='image', ascii=True):
+    for predicted_shape in tqdm(predicted_shapes, desc='Deduplicating', unit='shapes', ascii=True):
         nearby = [osm_shapes[i] for i in idx.intersection(predicted_shape.bounds, objects=False)]
 
         keep = False
