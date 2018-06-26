@@ -43,7 +43,7 @@ def main(args):
         unprojected = project(unbuffered, 'epsg:3395', 'epsg:4326')
         return unprojected
 
-    for i, shape in enumerate(tqdm(shapes, desc='Building graph', unit='shapes', ascii=True))
+    for i, shape in enumerate(tqdm(shapes, desc='Building graph', unit='shapes', ascii=True)):
         embiggened = buffered(shape)
 
         graph.add_edge(i, i)
