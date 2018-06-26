@@ -3,6 +3,7 @@ import argparse
 
 import geojson
 
+from tqdm import tqdm
 import shapely.geometry
 
 from robosat.spatial.core import make_index, project, union
@@ -42,7 +43,7 @@ def main(args):
         unprojected = project(unbuffered, 'epsg:3395', 'epsg:4326')
         return unprojected
 
-    for i, shape in enumerate(shapes):
+    for i, shape in enumerate(tqdm(shapes, desc='Building graph', unit='shapes', ascii=True))
         embiggened = buffered(shape)
 
         graph.add_edge(i, i)
@@ -55,11 +56,10 @@ def main(args):
 
     components = list(graph.components())
     assert sum([len(v) for v in components]) == len(shapes), 'components capture all shape indices'
-    print('Merged {} features into {} features'.format(len(shapes), len(components)), file=sys.stderr)
 
     features = []
 
-    for component in components:
+    for component in tqdm(components, desc='Merging components', unit='component', ascii=True):
         embiggened = [buffered(shapes[v]) for v in component]
         merged = unbuffered(union(embiggened))
 
