@@ -25,3 +25,5 @@ script:
   - python -m pytest
   - python -m pip install flake8==3.5.0
   - flake8 robosat
+  - python -m pip install black==18.6b4
+  - black . --exclude .env --check --line-length 120

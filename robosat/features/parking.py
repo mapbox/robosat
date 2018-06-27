@@ -18,7 +18,7 @@ class ParkingHandler:
 
     def apply(self, tile, mask):
         if tile.z != 18:
-            raise NotImplementedError('Parking lot post-processing thresholds are tuned for z18')
+            raise NotImplementedError("Parking lot post-processing thresholds are tuned for z18")
 
         # The post-processing pipeline removes noise and fills in smaller holes. We then
         # extract contours, simplify them and transform tile pixels into coordinates.
@@ -45,10 +45,10 @@ class ParkingHandler:
 
         # This seems to be a bug in the OpenCV Python bindings; the C++ interface
         # returns a vector<vec4> but here it's always wrapped in an extra list.
-        assert len(hierarchy) == 1, 'always single hierarchy for all polygons in multipolygon'
+        assert len(hierarchy) == 1, "always single hierarchy for all polygons in multipolygon"
         hierarchy = hierarchy[0]
 
-        assert len(multipolygons) == len(hierarchy), 'polygons and hierarchy in sync'
+        assert len(multipolygons) == len(hierarchy), "polygons and hierarchy in sync"
 
         polygons = [simplify(polygon, self.simplify_threshold) for polygon in multipolygons]
 
@@ -59,7 +59,7 @@ class ParkingHandler:
 
         for i, (polygon, node) in enumerate(zip(polygons, hierarchy)):
             if len(polygon) < 3:
-                print('Warning: simplified feature no longer valid polygon, skipping', file=sys.stderr)
+                print("Warning: simplified feature no longer valid polygon, skipping", file=sys.stderr)
                 continue
 
             _, _, _, parent_idx = node
@@ -68,7 +68,7 @@ class ParkingHandler:
 
             # Only handles polygons with a nesting of two levels for now => no multipolygons.
             if len(ancestors) > 1:
-                print('Warning: polygon ring nesting level too deep, skipping', file=sys.stderr)
+                print("Warning: polygon ring nesting level too deep, skipping", file=sys.stderr)
                 continue
 
             # A single mapping: i => {i} implies single free-standing polygon, no inner rings.
@@ -86,7 +86,7 @@ class ParkingHandler:
             for child in children:
                 rings.append(featurize(tile, polygons[child], mask.shape[:2]))
 
-            assert 0 < len(rings), 'at least one outer ring in a polygon'
+            assert 0 < len(rings), "at least one outer ring in a polygon"
 
             geometry = geojson.Polygon(rings)
             shape = shapely.geometry.shape(geometry)
@@ -94,10 +94,10 @@ class ParkingHandler:
             if shape.is_valid:
                 self.features.append(geojson.Feature(geometry=geometry))
             else:
-                print('Warning: extracted feature is not valid, skipping', file=sys.stderr)
+                print("Warning: extracted feature is not valid, skipping", file=sys.stderr)
 
     def save(self, out):
         collection = geojson.FeatureCollection(self.features)
 
-        with open(out, 'w') as fp:
+        with open(out, "w") as fp:
             geojson.dump(collection, fp)

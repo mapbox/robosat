@@ -7,7 +7,7 @@ from rtree.index import Index, Property
 
 
 def project(shape, source, target):
-    '''Projects a geometry from one coordinate system into another.
+    """Projects a geometry from one coordinate system into another.
 
     Args:
       shape: the geometry to project.
@@ -16,24 +16,22 @@ def project(shape, source, target):
 
     Returns:
       The projected geometry in the target coordinate system.
-    '''
+    """
 
-    project = functools.partial(pyproj.transform,
-                                pyproj.Proj(init=source),
-                                pyproj.Proj(init=target))
+    project = functools.partial(pyproj.transform, pyproj.Proj(init=source), pyproj.Proj(init=target))
 
     return shapely.ops.transform(project, shape)
 
 
 def union(shapes):
-    '''Returns the union of all shapes.
+    """Returns the union of all shapes.
 
     Args:
       shapes: the geometries to merge into one.
 
     Returns:
       The union of all shapes as one shape.
-    '''
+    """
 
     assert shapes
 
@@ -44,7 +42,7 @@ def union(shapes):
 
 
 def iou(lhs, rhs):
-    '''Calculates intersection over union metric between two shapes..
+    """Calculates intersection over union metric between two shapes..
 
     Args:
       lhs: first shape for IoU calculation.
@@ -52,11 +50,11 @@ def iou(lhs, rhs):
 
     Returns:
       IoU metric in range [0, 1]
-    '''
+    """
 
     # equal-area projection for comparing shape areas
-    lhs = project(lhs, 'epsg:4326', 'esri:54009')
-    rhs = project(rhs, 'epsg:4326', 'esri:54009')
+    lhs = project(lhs, "epsg:4326", "esri:54009")
+    rhs = project(rhs, "epsg:4326", "esri:54009")
 
     intersection = lhs.intersection(rhs)
     union = lhs.union(rhs)
@@ -68,14 +66,14 @@ def iou(lhs, rhs):
 
 
 def make_index(shapes):
-    '''Creates an index for fast and efficient spatial queries.
+    """Creates an index for fast and efficient spatial queries.
 
     Args:
       shapes: shapely shapes to bulk-insert bounding boxes for into the spatial index.
 
     Returns:
       The spatial index created from the shape's bounding boxes.
-    '''
+    """
 
     # Todo: benchmark these for our use-cases
     prop = Property()

@@ -12,14 +12,15 @@ from robosat.tiles import tiles_from_csv, fetch_image
 
 
 def add_parser(subparser):
-    parser = subparser.add_parser('download', help='downloads images from Mapbox Maps API',
-                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = subparser.add_parser(
+        "download", help="downloads images from Mapbox Maps API", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
-    parser.add_argument('url', type=str, help='endpoint with {z}/{x}/{y} variables to fetch image tiles from')
-    parser.add_argument('--ext', type=str, default='webp', help='file format to save images in')
-    parser.add_argument('--rate', type=int, default=10, help='rate limit in max. requests per second')
-    parser.add_argument('tiles', type=str, help='path to .csv tiles file')
-    parser.add_argument('out', type=str, help='path to slippy map directory for storing tiles')
+    parser.add_argument("url", type=str, help="endpoint with {z}/{x}/{y} variables to fetch image tiles from")
+    parser.add_argument("--ext", type=str, default="webp", help="file format to save images in")
+    parser.add_argument("--rate", type=int, default=10, help="rate limit in max. requests per second")
+    parser.add_argument("tiles", type=str, help="path to .csv tiles file")
+    parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
 
     parser.set_defaults(func=main)
 
@@ -32,7 +33,7 @@ def main(args):
 
         # tqdm has problems with concurrent.futures.ThreadPoolExecutor; explicitly call `.update`
         # https://github.com/tqdm/tqdm/issues/97
-        progress = tqdm(total=len(tiles), ascii=True, unit='image')
+        progress = tqdm(total=len(tiles), ascii=True, unit="image")
 
         with futures.ThreadPoolExecutor(num_workers) as executor:
 
@@ -42,7 +43,7 @@ def main(args):
                 x, y, z = map(str, [tile.x, tile.y, tile.z])
 
                 os.makedirs(os.path.join(args.out, z, x), exist_ok=True)
-                path = os.path.join(args.out, z, x, '{}.{}'.format(y, args.ext))
+                path = os.path.join(args.out, z, x, "{}.{}".format(y, args.ext))
 
                 if os.path.isfile(path):
                     return tile, True
@@ -74,4 +75,4 @@ def main(args):
 
             for tile, ok in executor.map(worker, tiles):
                 if not ok:
-                    print('Warning: {} failed, skipping'.format(tile), file=sys.stderr)
+                    print("Warning: {} failed, skipping".format(tile), file=sys.stderr)
