@@ -2,13 +2,28 @@
 
 import argparse
 
-from robosat.tools import compare, cover, dedupe, download, extract, features, \
-    masks, merge, predict, rasterize, serve, stats, subset, train, weights
+from robosat.tools import (
+    compare,
+    cover,
+    dedupe,
+    download,
+    extract,
+    features,
+    masks,
+    merge,
+    predict,
+    rasterize,
+    serve,
+    stats,
+    subset,
+    train,
+    weights,
+)
 
 
 def add_parsers():
-    parser = argparse.ArgumentParser(prog='./rs', )
-    subparser = parser.add_subparsers(title='robosat tools', metavar='')
+    parser = argparse.ArgumentParser(prog="./rs")
+    subparser = parser.add_subparsers(title="robosat tools", metavar="")
 
     # Add your tool's entry point below.
 
@@ -37,6 +52,6 @@ def add_parsers():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = add_parsers()
     args.func(args)

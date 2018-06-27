@@ -1,5 +1,5 @@
-'''Color handling, color maps, color palettes.
-'''
+"""Color handling, color maps, color palettes.
+"""
 
 import colorsys
 
@@ -17,37 +17,37 @@ def _rgb(v):
 
 @unique
 class Mapbox(Enum):
-    '''Mapbox-themed colors.
+    """Mapbox-themed colors.
 
     See: https://www.mapbox.com/base/styling/color/
-    '''
+    """
 
-    dark     = _rgb('#404040')
-    gray     = _rgb('#eeeeee')
-    light    = _rgb('#f8f8f8')
-    white    = _rgb('#ffffff')
-    cyan     = _rgb('#3bb2d0')
-    blue     = _rgb('#3887be')
-    bluedark = _rgb('#223b53')
-    denim    = _rgb('#50667f')
-    navy     = _rgb('#28353d')
-    navydark = _rgb('#222b30')
-    purple   = _rgb('#8a8acb')
-    teal     = _rgb('#41afa5')
-    green    = _rgb('#56b881')
-    yellow   = _rgb('#f1f075')
-    mustard  = _rgb('#fbb03b')
-    orange   = _rgb('#f9886c')
-    red      = _rgb('#e55e5e')
-    pink     = _rgb('#ed6498')
+    dark = _rgb("#404040")
+    gray = _rgb("#eeeeee")
+    light = _rgb("#f8f8f8")
+    white = _rgb("#ffffff")
+    cyan = _rgb("#3bb2d0")
+    blue = _rgb("#3887be")
+    bluedark = _rgb("#223b53")
+    denim = _rgb("#50667f")
+    navy = _rgb("#28353d")
+    navydark = _rgb("#222b30")
+    purple = _rgb("#8a8acb")
+    teal = _rgb("#41afa5")
+    green = _rgb("#56b881")
+    yellow = _rgb("#f1f075")
+    mustard = _rgb("#fbb03b")
+    orange = _rgb("#f9886c")
+    red = _rgb("#e55e5e")
+    pink = _rgb("#ed6498")
 
 
 def make_palette(*colors):
-    '''Builds a PIL-compatible color palette from color names.
+    """Builds a PIL-compatible color palette from color names.
 
     Args:
       colors: variable number of color names.
-    '''
+    """
 
     rgbs = [Mapbox[color].value for color in colors]
     flattened = sum(rgbs, ())
@@ -55,20 +55,20 @@ def make_palette(*colors):
 
 
 def color_string_to_rgb(color):
-    '''Convert color string to a list of RBG integers.
+    """Convert color string to a list of RBG integers.
 
     Args:
       color: the string color value for example "250,0,0"
 
     Returns:
       color: as a list of RGB integers for example [250,0,0]
-    '''
+    """
 
-    return [*map(int, color.split(','))]
+    return [*map(int, color.split(","))]
 
 
 def continuous_palette_for_color(color, bins=256):
-    '''Creates a continuous color palette based on a single color.
+    """Creates a continuous color palette based on a single color.
 
     Args:
       color: the rgb color tuple to create a continuous palette for.
@@ -76,7 +76,7 @@ def continuous_palette_for_color(color, bins=256):
 
     Returns:
       The continuous rgb color palette with 3*bins values represented as [r0,g0,b0,r1,g1,b1,..]
-    '''
+    """
 
     # A quick and dirty way to create a continuous color palette is to convert from the RGB color
     # space into the HSV color space and then only adapt the color's saturation (S component).

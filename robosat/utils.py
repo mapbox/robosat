@@ -12,8 +12,8 @@ def plot(out, history):
     for values in history.values():
         plt.plot(values)
 
-    plt.xlabel('epoch')
+    plt.xlabel("epoch")
     plt.legend(list(history))
 
-    plt.savefig(out, format='png')
+    plt.savefig(out, format="png")
     plt.close()

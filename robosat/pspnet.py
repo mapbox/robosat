@@ -1,4 +1,4 @@
-'''The "Pyramid Scene Parsing Network" (PSPNet) architecture for semantic segmentation.
+"""The "Pyramid Scene Parsing Network" (PSPNet) architecture for semantic segmentation.
 
 See:
 - https://arxiv.org/abs/1612.01105 - Pyramid Scene Parsing Network
@@ -6,7 +6,7 @@ See:
 - https://arxiv.org/abs/1511.07122 - Multi-Scale Context Aggregation by Dilated Convolutions
 - https://arxiv.org/abs/1606.02147 - ENet: A Deep Neural Network Architecture for Real-Time Semantic Segmentation
 - https://arxiv.org/abs/1512.03385 - Deep Residual Learning for Image Recognition
-'''
+"""
 
 import torch
 import torch.nn as nn
@@ -14,7 +14,7 @@ from torchvision.models import resnet50
 
 
 def PyramidBlock(scale, num_in, num_out):
-    '''Creates a single pyramid module for a specific scale.
+    """Creates a single pyramid module for a specific scale.
 
     Args:
       scale: the pyramid's scale for pooling.
@@ -23,28 +23,29 @@ def PyramidBlock(scale, num_in, num_out):
 
     Returns:
       The pyramid module.
-    '''
+    """
 
     return nn.Sequential(
         nn.AdaptiveAvgPool2d(scale),
         nn.Conv2d(num_in, num_out, kernel_size=1, bias=False),
         nn.BatchNorm2d(num_out),
-        nn.ReLU(inplace=True))
+        nn.ReLU(inplace=True),
+    )
 
 
 class PSPNet(nn.Module):
-    '''The "Pyramid Scene Parsing Network" (PSPNet) architecture.
+    """The "Pyramid Scene Parsing Network" (PSPNet) architecture.
 
     See: https://arxiv.org/abs/1612.01105
-    '''
+    """
 
     def __init__(self, num_classes, pretrained=False):
-        '''Creates an `PSPNet` instance for semantic segmentation.
+        """Creates an `PSPNet` instance for semantic segmentation.
 
         Args:
           num_classes: number of classes to predict.
           pretrained: use a pre-trained `ResNet` backbone for convolutional feature extraction.
-        '''
+        """
 
         super().__init__()
 
@@ -78,13 +79,13 @@ class PSPNet(nn.Module):
         # ResNets reduce spatial dimension too much for segmentation => patch in dilated convolutions.
 
         for name, module in self.block3.named_modules():
-            if 'conv2' in name:
+            if "conv2" in name:
                 module.dilation = (2, 2)
                 module.padding = (2, 2)
                 module.stride = (1, 1)
 
         for name, module in self.block4.named_modules():
-            if 'conv2' in name:
+            if "conv2" in name:
                 module.dilation = (4, 4)
                 module.padding = (4, 4)
                 module.stride = (1, 1)
@@ -100,19 +101,20 @@ class PSPNet(nn.Module):
             nn.Conv2d(4096, 512, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
-            nn.Conv2d(512, num_classes, kernel_size=1))
+            nn.Conv2d(512, num_classes, kernel_size=1),
+        )
 
         self.initialize()
 
     def forward(self, x):
-        '''The networks forward pass for which autograd synthesizes the backwards pass.
+        """The networks forward pass for which autograd synthesizes the backwards pass.
 
         Args:
           x: the input tensor
 
         Returns:
           The networks output tensor.
-        '''
+        """
 
         size = x.size()
 
@@ -122,26 +124,26 @@ class PSPNet(nn.Module):
         x = self.block3(x)
         x = self.block4(x)
 
-        pyramid1 = nn.functional.upsample(self.pyramid1(x), size=x.size()[2:], mode='bilinear')
-        pyramid2 = nn.functional.upsample(self.pyramid2(x), size=x.size()[2:], mode='bilinear')
-        pyramid3 = nn.functional.upsample(self.pyramid3(x), size=x.size()[2:], mode='bilinear')
-        pyramid6 = nn.functional.upsample(self.pyramid6(x), size=x.size()[2:], mode='bilinear')
+        pyramid1 = nn.functional.upsample(self.pyramid1(x), size=x.size()[2:], mode="bilinear")
+        pyramid2 = nn.functional.upsample(self.pyramid2(x), size=x.size()[2:], mode="bilinear")
+        pyramid3 = nn.functional.upsample(self.pyramid3(x), size=x.size()[2:], mode="bilinear")
+        pyramid6 = nn.functional.upsample(self.pyramid6(x), size=x.size()[2:], mode="bilinear")
 
         x = torch.cat([x, pyramid1, pyramid2, pyramid3, pyramid6], dim=1)
 
         x = self.logits(x)
 
-        x = nn.functional.upsample(x, size=size[2:], mode='bilinear')
+        x = nn.functional.upsample(x, size=size[2:], mode="bilinear")
 
         return x
 
     def initialize(self):
-        '''Initializes the network's layers.
-        '''
+        """Initializes the network's layers.
+        """
 
         for module in self.modules():
             if isinstance(module, nn.Conv2d):
-                nn.init.kaiming_normal_(module.weight, nonlinearity='relu')
+                nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
             if isinstance(module, nn.BatchNorm2d):
                 nn.init.constant_(module.weight, 1)
                 nn.init.constant_(module.bias, 0)

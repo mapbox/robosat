@@ -1,17 +1,17 @@
-'''The "U-Net" architecture for semantic segmentation.
+"""The "U-Net" architecture for semantic segmentation.
 
 See:
 - https://arxiv.org/abs/1505.04597 - U-Net: Convolutional Networks for Biomedical Image Segmentation
 - https://arxiv.org/abs/1411.4038  - Fully Convolutional Networks for Semantic Segmentation
 
-'''
+"""
 
 import torch
 import torch.nn as nn
 
 
 def Block(num_in, num_out):
-    '''Creates a single U-Net building block.
+    """Creates a single U-Net building block.
 
     Args:
       num_in: number of input feature maps for the convolutional layer.
@@ -19,51 +19,52 @@ def Block(num_in, num_out):
 
     Returns:
       The U-Net's building block module.
-    '''
+    """
     return nn.Sequential(
         nn.Conv2d(num_in, num_out, kernel_size=3, padding=1),
         nn.BatchNorm2d(num_out),
         nn.PReLU(num_parameters=num_out),
         nn.Conv2d(num_out, num_out, kernel_size=3, padding=1),
         nn.BatchNorm2d(num_out),
-        nn.PReLU(num_parameters=num_out))
+        nn.PReLU(num_parameters=num_out),
+    )
 
 
 def Downsample():
-    '''Downsamples the spatial resolution by a factor of two.
+    """Downsamples the spatial resolution by a factor of two.
 
     Returns:
       The downsampling module.
-    '''
+    """
 
     return nn.MaxPool2d(kernel_size=2, stride=2)
 
 
 def Upsample(num_in):
-    '''Upsamples the spatial resolution by a factor of two.
+    """Upsamples the spatial resolution by a factor of two.
 
     Args:
       num_in: number of input feature maps for the transposed convolutional layer.
 
     Returns:
       The upsampling module.
-    '''
+    """
 
     return nn.ConvTranspose2d(num_in, num_in // 2, kernel_size=2, stride=2)
 
 
 class UNet(nn.Module):
-    '''The "U-Net" architecture for semantic segmentation.
+    """The "U-Net" architecture for semantic segmentation.
 
     See: https://arxiv.org/abs/1505.04597
-    '''
+    """
 
     def __init__(self, num_classes):
-        '''Creates an `UNet` instance for semantic segmentation.
+        """Creates an `UNet` instance for semantic segmentation.
 
         Args:
           num_classes: number of classes to predict.
-        '''
+        """
 
         super().__init__()
 
@@ -97,14 +98,14 @@ class UNet(nn.Module):
         self.initialize()
 
     def forward(self, x):
-        '''The networks forward pass for which autograd synthesizes the backwards pass.
+        """The networks forward pass for which autograd synthesizes the backwards pass.
 
         Args:
           x: the input tensor
 
         Returns:
           The networks output tensor.
-        '''
+        """
 
         block1 = self.block1(x)
         down1 = self.down1(block1)
@@ -136,12 +137,12 @@ class UNet(nn.Module):
         return block10
 
     def initialize(self):
-        '''Initializes the network's layers.
-        '''
+        """Initializes the network's layers.
+        """
 
         for module in self.modules():
             if isinstance(module, nn.Conv2d):
-                nn.init.kaiming_normal_(module.weight, nonlinearity='relu')
+                nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
                 nn.init.constant_(module.bias, 0)
             if isinstance(module, nn.BatchNorm2d):
                 nn.init.constant_(module.weight, 1)

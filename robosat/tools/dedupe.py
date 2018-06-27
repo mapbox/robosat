@@ -11,14 +11,18 @@ from robosat.spatial.core import make_index, iou
 
 
 def add_parser(subparser):
-    parser = subparser.add_parser('dedupe', help='deduplicates features against OpenStreetMap',
-                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = subparser.add_parser(
+        "dedupe",
+        help="deduplicates features against OpenStreetMap",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-    parser.add_argument('osm', type=str, help='ground truth GeoJSON feature collection from OpenStreetMap')
-    parser.add_argument('predicted', type=str, help='predicted GeoJSON feature collection to deduplicate')
-    parser.add_argument('--threshold', type=float, required=True,
-                        help='maximum allowed IoU to keep predictions, between 0.0 and 1.0')
-    parser.add_argument('out', type=str, help='path to GeoJSON to save deduplicated features to')
+    parser.add_argument("osm", type=str, help="ground truth GeoJSON feature collection from OpenStreetMap")
+    parser.add_argument("predicted", type=str, help="predicted GeoJSON feature collection to deduplicate")
+    parser.add_argument(
+        "--threshold", type=float, required=True, help="maximum allowed IoU to keep predictions, between 0.0 and 1.0"
+    )
+    parser.add_argument("out", type=str, help="path to GeoJSON to save deduplicated features to")
 
     parser.set_defaults(func=main)
 
@@ -29,19 +33,19 @@ def main(args):
 
     # Todo: at the moment we load all OSM shapes. It would be more efficient to tile
     #       cover and load only OSM shapes in the tiles covering the predicted shapes.
-    osm_shapes = [shapely.geometry.shape(feature['geometry']) for feature in osm['features']]
+    osm_shapes = [shapely.geometry.shape(feature["geometry"]) for feature in osm["features"]]
     del osm
 
     with open(args.predicted) as fp:
         predicted = json.load(fp)
 
-    predicted_shapes = [shapely.geometry.shape(features['geometry']) for features in predicted['features']]
+    predicted_shapes = [shapely.geometry.shape(features["geometry"]) for features in predicted["features"]]
     del predicted
 
     idx = make_index(osm_shapes)
     features = []
 
-    for predicted_shape in tqdm(predicted_shapes, desc='Deduplicating', unit='shapes', ascii=True):
+    for predicted_shape in tqdm(predicted_shapes, desc="Deduplicating", unit="shapes", ascii=True):
         nearby = [osm_shapes[i] for i in idx.intersection(predicted_shape.bounds, objects=False)]
 
         keep = False
@@ -65,5 +69,5 @@ def main(args):
 
     collection = geojson.FeatureCollection(features)
 
-    with open(args.out, 'w') as fp:
+    with open(args.out, "w") as fp:
         geojson.dump(collection, fp)
