@@ -117,7 +117,7 @@ Extracts GeoJSON features from OpenStreetMap to build a training set from.
 The result of `rs extract` is a GeoJSON file with the extracted feature geometries.
 
 The `rs extract` tool walks OpenStreetMap `.osm.pbf` base map files (e.g. from [Geofabrik](http://download.geofabrik.de)) and gathers feature geometries.
-These features are example polygons for parking lots, buildings, or roads.
+These features are for example polygons for parking lots, buildings, or roads.
 
 
 ### rs cover
