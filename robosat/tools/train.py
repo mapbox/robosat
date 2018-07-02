@@ -40,7 +40,6 @@ def add_parser(subparser):
 
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
-    parser.add_argument("--resume", type=str, required=False, help="checkpoint to resume training from")
 
     parser.set_defaults(func=main)
 
@@ -62,20 +61,6 @@ def main(args):
     num_classes = len(dataset["common"]["classes"])
     net = UNet(num_classes).to(device)
 
-    if args.resume:
-        path = os.path.join(model["common"]["checkpoint"], args.resume)
-
-        cuda = model["common"]["cuda"]
-
-        def map_location(storage, _):
-            return storage.cuda() if cuda else storage.cpu()
-
-        chkpt = torch.load(path, map_location=map_location)
-        net.load_state_dict(chkpt)
-        resume_at_epoch = int(args.resume[11:16])
-    else:
-        resume_at_epoch = 0
-
     if model["common"]["cuda"]:
         torch.backends.cudnn.benchmark = True
         net = DataParallel(net)
@@ -86,9 +71,6 @@ def main(args):
 
     weight = torch.Tensor(dataset["weights"]["values"])
 
-    for i in range(resume_at_epoch):
-        scheduler.step()
-
     criterion = CrossEntropyLoss2d(weight=weight).to(device)
     # criterion = FocalLoss2d(weight=weight).to(device)
 
@@ -98,7 +80,7 @@ def main(args):
 
     history = collections.defaultdict(list)
 
-    for epoch in range(resume_at_epoch, num_epochs):
+    for epoch in range(num_epochs):
         print("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, scheduler, criterion)
