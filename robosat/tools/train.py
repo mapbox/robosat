@@ -8,8 +8,7 @@ from PIL import Image
 import torch
 import torch.backends.cudnn
 from torch.nn import DataParallel
-from torch.optim import SGD
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision.transforms import Resize, CenterCrop, Normalize
 
@@ -65,9 +64,7 @@ def main(args):
         torch.backends.cudnn.benchmark = True
         net = DataParallel(net)
 
-    optimizer = SGD(net.parameters(), lr=model["opt"]["lr"], momentum=model["opt"]["momentum"])
-
-    scheduler = MultiStepLR(optimizer, milestones=model["opt"]["milestones"], gamma=model["opt"]["gamma"])
+    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
 
     weight = torch.Tensor(dataset["weights"]["values"])
 
@@ -83,7 +80,7 @@ def main(args):
     for epoch in range(num_epochs):
         print("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
-        train_hist = train(train_loader, num_classes, device, net, optimizer, scheduler, criterion)
+        train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
         print("Train loss: {:.4f}, mean IoU: {:.4f}".format(train_hist["loss"], train_hist["iou"]))
 
         for k, v in train_hist.items():
@@ -102,14 +99,13 @@ def main(args):
         torch.save(net.state_dict(), os.path.join(model["common"]["checkpoint"], checkpoint))
 
 
-def train(loader, num_classes, device, net, optimizer, scheduler, criterion):
+def train(loader, num_classes, device, net, optimizer, criterion):
     num_samples = 0
     running_loss = 0
 
     iou = MeanIoU(range(num_classes))
 
     net.train()
-    scheduler.step()
 
     for images, masks, tiles in tqdm(loader, desc="Train", unit="batch", ascii=True):
         images = images.to(device)

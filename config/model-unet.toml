@@ -25,13 +25,7 @@
   epochs     = 10
 
   # Learning rate for the optimizer.
-  lr         = 0.001
+  lr         = 0.0001
 
-  # Momentum for the optimizer.
-  momentum   = 0.99
-
-  # Epochs at which to reduce the learning rate.
-  milestones = [3, 5, 7]
-
-  # Multiplicative factor for learning rate decay at milestones.
-  gamma      = 0.1
+  # Weight decay l2 penalty for the optimizer
+  decay      = 0.0001
