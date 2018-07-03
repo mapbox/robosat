@@ -5,9 +5,6 @@
 # Model specific common attributes.
 [common]
 
-  # The model to use. Depending on the model different attributes might be available.
-  model      = 'unet'
-
   # Use CUDA for GPU acceleration.
   cuda       = true
 

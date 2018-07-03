@@ -16,13 +16,6 @@
   colors  = ['denim', 'orange']
 
 
-# Dataset specific statistics computes on the training data.
-# Note: use `./rs stats -h` to compute these for new datasets.
-[stats]
-  mean = [0.457217, 0.449255, 0.434162]
-  std  = [0.248181, 0.228792, 0.208435]
-
-
 # Dataset specific class weights computes on the training data.
 # Note: use `./rs weights -h` to compute these for new datasets.
 [weights]
