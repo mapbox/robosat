@@ -72,10 +72,29 @@ def tiles_from_slippy_map(root):
       The mercantile tiles and file paths from the slippy map directory.
     """
 
+    # The Python string functions (.isdigit, .isdecimal, etc.) handle
+    # unicode codepoints; we only care about digits convertible to int
+    def isdigit(v):
+        try:
+            _ = int(v)  # noqa: F841
+            return True
+        except ValueError:
+            return False
+
     for z in os.listdir(root):
+        if not isdigit(z):
+            continue
+
         for x in os.listdir(os.path.join(root, z)):
+            if not isdigit(x):
+                continue
+
             for name in os.listdir(os.path.join(root, z, x)):
                 y = os.path.splitext(name)[0]
+
+                if not isdigit(y):
+                    continue
+
                 tile = mercantile.Tile(x=int(x), y=int(y), z=int(z))
                 path = os.path.join(root, z, x, name)
                 yield tile, path
