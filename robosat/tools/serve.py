@@ -105,7 +105,7 @@ def main(args):
         sys.exit("Error: CUDA requested but not available")
 
     global size
-    size = args.size
+    size = args.tile_size
 
     global token
     token = os.getenv("MAPBOX_ACCESS_TOKEN")
