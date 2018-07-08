@@ -177,8 +177,6 @@ Before you can start training you need the following.
 
 - You need to add the path to the dataset's directory and the calculated class weights and statistics to the dataset config.
 
-Note: If you run `rs train` in an environment without X11 you need to set `export MPLBACKEND="agg"` for charts, see [the matplotlib docs](https://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server).
-
 
 ### rs export
 
