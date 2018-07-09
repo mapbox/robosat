@@ -4,6 +4,8 @@ import osmium
 import geojson
 import shapely.geometry
 
+from robosat.osm.core import is_polygon
+
 
 class BuildingHandler(osmium.SimpleHandler):
     """Extracts building polygon features (visible in satellite imagery) from the map.
@@ -19,7 +21,7 @@ class BuildingHandler(osmium.SimpleHandler):
         self.features = []
 
     def way(self, w):
-        if not w.is_closed():
+        if not is_polygon(w):
             return
 
         if "building" not in w.tags:
