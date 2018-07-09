@@ -4,6 +4,8 @@ import osmium
 import geojson
 import shapely.geometry
 
+from robosat.osm.core import is_polygon
+
 
 class ParkingHandler(osmium.SimpleHandler):
     """Extracts parking lot polygon features (visible in satellite imagery) from the map.
@@ -17,7 +19,7 @@ class ParkingHandler(osmium.SimpleHandler):
         self.features = []
 
     def way(self, w):
-        if not w.is_closed():
+        if not is_polygon(w):
             return
 
         if "amenity" not in w.tags or w.tags["amenity"] != "parking":
