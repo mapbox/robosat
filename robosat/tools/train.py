@@ -201,7 +201,7 @@ def get_dataset_loaders(model, dataset):
         [os.path.join(path, "validation", "images")], os.path.join(path, "validation", "labels"), transform
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
 
     return train_loader, val_loader
