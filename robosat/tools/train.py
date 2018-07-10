@@ -7,8 +7,8 @@ from contextlib import contextmanager
 from PIL import Image
 
 import torch
+import torch.nn as nn
 import torch.backends.cudnn
-from torch.nn import DataParallel
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision.transforms import Resize, CenterCrop, Normalize
@@ -27,7 +27,7 @@ from robosat.transforms import (
 from robosat.datasets import SlippyMapTilesConcatenation
 from robosat.metrics import Metrics
 from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d, LovaszLoss2d
-from robosat.unet import UNet
+from robosat.fpn import FPNSegmentation
 from robosat.utils import plot
 from robosat.config import load_config
 from robosat.log import Log
@@ -68,8 +68,8 @@ def main(args):
     os.makedirs(model["common"]["checkpoint"], exist_ok=True)
 
     num_classes = len(dataset["common"]["classes"])
-    net = UNet(num_classes)
-    net = DataParallel(net)
+    net = FPNSegmentation(num_classes)
+    net = nn.DataParallel(net)
     net = net.to(device)
 
     if model["common"]["cuda"]:
