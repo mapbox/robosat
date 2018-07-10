@@ -186,8 +186,8 @@ def get_dataset_loaders(model, dataset):
             JointTransform(CenterCrop(target_size), CenterCrop(target_size)),
             JointRandomHorizontalFlip(0.5),
             JointRandomRotation(0.5, 90),
-            JointRandomRotation(0.5, 180),
-            JointRandomRotation(0.5, 270),
+            JointRandomRotation(0.5, 90),
+            JointRandomRotation(0.5, 90),
             JointTransform(ImageToTensor(), MaskToTensor()),
             JointTransform(Normalize(mean=mean, std=std), None),
         ]
