@@ -110,6 +110,8 @@ Also see the sub-command help available via
     ./rs <tool> --help
 
 Most tools take a dataset or model configuration file. See examples in the [`configs`](./config) directory.
+You will need to adapt these configuration files to your own dataset, for example setting your tile resolution (e.g. 256x256 pixel).
+You will also need to adapt these configuration files to your specific deployment setup, for example using CUDA and setting batch sizes.
 
 
 ### rs extract
