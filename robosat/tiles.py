@@ -120,6 +120,24 @@ def tiles_from_csv(path):
             yield mercantile.Tile(*map(int, row))
 
 
+def tiles_to_csv(tiles, path):
+    """Read tiles from a line-delimited csv file.
+
+    Args:
+      tiles: the mercantile tiles to write.
+      file: the path to write the csv file to.
+    """
+
+    rows = []
+
+    for tile in tiles:
+        rows.append(map(str, [tile.x, tile.y, tile.z]))
+
+    with open(path, "w") as fp:
+        writer = csv.writer(fp)
+        writer.writerows(rows)
+
+
 def stitch_image(into, into_box, image, image_box):
     """Stitches two images together in-place.
 
