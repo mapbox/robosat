@@ -15,7 +15,7 @@ def main(args):
     if args.count:
         tiles = tiles[: args.count]
 
-    tiles_to_csv(tiles, args.out)
+    tiles_to_csv(sorted(tiles), args.out)
 
 
 def add_parser(subparser):
