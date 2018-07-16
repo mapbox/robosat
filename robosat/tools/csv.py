@@ -18,12 +18,16 @@ def main(args):
     tiles_to_csv(tiles, args.out)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process some integers.")
+def add_parser(subparser):
+    parser = subparser.add_parser(
+        "csv",
+        help="writes files in a slippy map directory to a file",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser.add_argument("dir", type=str, help="slippy map directory to read images from")
-    parser.add_argument("out", type=str, help="path to write csv of all images in the directory")
+    parser.add_argument("out", type=str, help="path to write csv of all images in directory")
     parser.add_argument("--shuffle", type=bool, default=False, help="whether to shuffle the images")
-    parser.add_argument("--count", type=int, default=None, help="Maximum number of images in the csv")
+    parser.add_argument("--count", type=int, default=None, help="number of images to write to csv")
 
-    main(parser.parse_args())
+    parser.set_defaults(func=main)

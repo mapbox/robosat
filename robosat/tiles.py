@@ -121,11 +121,11 @@ def tiles_from_csv(path):
 
 
 def tiles_to_csv(tiles, path):
-    """Read tiles from a line-delimited csv file.
+    """Write tiles to a line-delimited csv file.
 
     Args:
       tiles: the mercantile tiles to write.
-      file: the path to write the csv file to.
+      path: the path to write the csv file to.
     """
 
     rows = []
