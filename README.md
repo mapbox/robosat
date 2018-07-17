@@ -84,16 +84,23 @@ If you want to contribute, see the [contributing section](#contributing) for mor
 apt-get install build-essential libboost-python-dev libexpat1-dev zlib1g-dev libbz2-dev libspatialindex-dev
 ```
 
+- Use a virtualenv for installing this project locally
+
+```bash
+python3 -m venv .env
+. .env/bin/activate
+```
+
 - Get the PyTorch wheel for your environment from http://pytorch.org. For example for Python 3.5 and CUDA 8
 
 ```bash
-pip install torch
+python3 -m pip install torch
 ```
 
 - Install remaining dependencies
 
 ```bash
-pip install -r deps/requirements-lock.txt
+python3 -m pip install -r deps/requirements-lock.txt
 ```
 
 
