@@ -28,7 +28,6 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends\
 RUN pip3 --no-cache-dir install setuptools && \    
     pip3 --no-cache-dir install http://download.pytorch.org/whl/cpu/torch-${TORCH}-cp${PYTHON}-cp${PYTHON}m-linux_x86_64.whl    
         
-    
 # get robosat    
 RUN git clone https://github.com/mapbox/robosat.git /root/robosat && \    
     cd /root/robosat && \    
