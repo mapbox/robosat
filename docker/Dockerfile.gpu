@@ -31,7 +31,7 @@ RUN pip3 --no-cache-dir install setuptools && \
 # get robosat    
 RUN git clone https://github.com/mapbox/robosat.git /root/robosat && \    
     cd /root/robosat && \    
-    pip3 --no-cache-dir -r deps/requirements-lock.txt     
+    pip3 --no-cache-dir install -r deps/requirements-lock.txt     
     
 WORKDIR "/root/robosat"    
 CMD ["/bin/bash"]
