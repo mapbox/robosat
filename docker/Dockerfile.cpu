@@ -1,7 +1,5 @@
 FROM ubuntu:16.04    
     
-# MAINTAINER sshuair<sshuair@gmail.com>    
-    
 ARG TORCH=0.4.0    
 ARG CUDA=91    
 ARG PYTHON=35    
