@@ -38,6 +38,9 @@ class ParkingHandler:
 
         multipolygons, hierarchy = contours(grown)
 
+        if hierarchy is None:
+            return
+
         # In the following we re-construct the hierarchy walking from polygons up to the top-most polygon.
         # We then crete a GeoJSON polygon with a single outer ring and potentially multiple inner rings.
         #
