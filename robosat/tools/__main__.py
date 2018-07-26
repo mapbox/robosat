@@ -5,6 +5,7 @@ import argparse
 from robosat.tools import (
     compare,
     cover,
+    csv,
     dedupe,
     download,
     extract,
@@ -44,6 +45,7 @@ def add_parsers():
 
     weights.add_parser(subparser)
 
+    csv.add_parser(subparser)
     compare.add_parser(subparser)
     subset.add_parser(subparser)
 
