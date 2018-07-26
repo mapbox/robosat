@@ -1,0 +1,37 @@
+FROM nvidia/cuda:9.1-cudnn7-devel-ubuntu16.04
+
+ARG TORCH=0.4.0    
+ARG CUDA=91    
+ARG PYTHON=35    
+    
+# install dependencies    
+RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends\     
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-tk \
+        python3-pip \
+        build-essential \
+        libboost-python-dev \
+        libexpat1-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libspatialindex-dev \
+        libsm6 \
+        libglib2.0-0 \
+        git \
+        && \    
+    apt-get clean && \    
+    rm -rf /var/lib/apt/lists/*    
+
+# install python package
+RUN pip3 --no-cache-dir install setuptools && \
+    pip3 --no-cache-dir install http://download.pytorch.org/whl/cu${CUDA}/torch-${TORCH}-cp${PYTHON}-cp${PYTHON}m-linux_x86_64.whl
+
+# get robosat    
+RUN git clone https://github.com/mapbox/robosat.git /root/robosat && \    
+    cd /root/robosat && \    
+    pip3 --no-cache-dir install -r deps/requirements-lock.txt     
+    
+WORKDIR "/root/robosat"    
+CMD ["/bin/bash"]
