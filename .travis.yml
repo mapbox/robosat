@@ -2,6 +2,9 @@ language: generic
 sudo: required
 dist: trusty
 
+services:
+  - docker
+
 matrix:
   fast_finish: true
 
@@ -14,6 +17,10 @@ matrix:
           packages: ['python3.6', 'python3.6-dev', 'python3.6-tk', 'python3.6-venv', 'build-essential', 'libboost-python-dev', 'libexpat1-dev', 'zlib1g-dev', 'libbz2-dev', 'libspatialindex-dev']
 
 before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - sudo apt-get update && sudo apt-get -y install docker-ce
+
   - sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 10
   - python3 -m venv .env && . .env/bin/activate
 
@@ -27,3 +34,25 @@ script:
   - flake8 robosat
   - python -m pip install black==18.6b4
   - black . --exclude .env --check --line-length 120
+
+after_success:
+  - |
+    if [[ $TRAVIS_BRANCH == "master" ]]; then
+      docker build -t mapbox/robosat:latest-cpu -f docker/Dockerfile.cpu .
+      docker build -t mapbox/robosat:latest-gpu -f docker/Dockerfile.gpu .
+
+      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+      docker push mapbox/robosat:latest-cpu
+      docker push mapbox/robosat:latest-gpu
+    fi
+  - |
+    if [[ ! -z $TRAVIS_TAG ]]; then
+      docker build -t mapbox/robosat:$TRAVIS_TAG-cpu -f docker/Dockerfile.cpu .
+      docker build -t mapbox/robosat:$TRAVIS_TAG-gpu -f docker/Dockerfile.gpu .
+
+      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+      docker push mapbox/robosat:$TRAVIS_TAG-cpu
+      docker push mapbox/robosat:$TRAVIS_TAG-gpu
+    fi
