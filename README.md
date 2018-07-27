@@ -78,6 +78,12 @@ If you want to contribute, see the [contributing section](#contributing) for mor
 
 ## Installation
 
+We provide pre-built Docker images packaging up everything you will need for both CPU as well as GPU environments on Docker Hub under the [mapbox/robosat](https://hub.docker.com/r/mapbox/robosat/tags/) namespace.
+The pre-built GPU Docker images require the [NVIDIA Container Runtime for Docker](https://github.com/NVIDIA/nvidia-docker).
+
+The following describes the installation from scratch.
+
+
 - Install native system dependencies required for Python 3 bindings
 
 ```bash
