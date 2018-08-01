@@ -27,7 +27,10 @@ def main(args):
     num_classes = len(dataset["common"]["classes"])
     net = UNet(num_classes)
 
-    chkpt = torch.load(args.checkpoint, map_location="cpu")
+    def map_location(storage, _):
+        return storage.cpu()
+
+    chkpt = torch.load(args.checkpoint, map_location=map_location)
     net = torch.nn.DataParallel(net)
     net.load_state_dict(chkpt)
 
