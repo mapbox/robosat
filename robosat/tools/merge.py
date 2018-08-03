@@ -65,6 +65,9 @@ def main(args):
         merged = unbuffered(union(embiggened))
 
         if merged.is_valid:
+            # Orient exterior ring of the polygon in counter-clockwise direction.
+            merged = shapely.geometry.polygon.orient(merged, sign=1.0)
+
             # equal-area projection; round to full m^2, we're not that precise anyway
             area = int(round(project(merged, "epsg:4326", "esri:54009").area))
 
