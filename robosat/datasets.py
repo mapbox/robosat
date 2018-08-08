@@ -54,8 +54,8 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
         self.inputs = [SlippyMapTiles(inp) for inp in inputs]
         self.target = SlippyMapTiles(target)
 
-        assert len(set([len(dataset) for dataset in self.inputs])) == 1, "same number of tiles in all inputs"
-        assert len(self.target) == len(self.inputs[0]), "same number of tiles in inputs and target"
+        assert len(set([len(dataset) for dataset in self.inputs])) == 1, "same number of tiles in all images"
+        assert len(self.target) == len(self.inputs[0]), "same number of tiles in images and label"
 
     def __len__(self):
         return len(self.target)
@@ -70,7 +70,7 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
         mask, mask_tile = self.target[i]
 
         assert len(set(tiles)) == 1, "all images are for the same tile"
-        assert tiles[0] == mask_tile, "image tile is the same as mask tile"
+        assert tiles[0] == mask_tile, "image tile is the same as label tile"
 
         if self.joint_transform is not None:
             images, mask = self.joint_transform(images, mask)
