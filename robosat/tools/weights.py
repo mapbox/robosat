@@ -44,6 +44,8 @@ def main(args):
         n += image.shape[0] * image.shape[1]
         counts += np.bincount(image.ravel(), minlength=num_classes)
 
+    assert n > 0, "dataset with masks must not be empty"
+
     # Class weighting scheme `w = 1 / ln(c + p)` see:
     # - https://arxiv.org/abs/1707.03718
     #     LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation
