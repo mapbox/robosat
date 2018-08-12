@@ -38,6 +38,7 @@ def add_parser(subparser):
 
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
 
     parser.set_defaults(func=main)
 
@@ -63,6 +64,13 @@ def main(args):
 
     if model["common"]["cuda"]:
         torch.backends.cudnn.benchmark = True
+
+    if args.checkpoint:
+        def map_location(storage, _):
+            return storage.cuda() if model["common"]["cuda"] else storage.cpu()
+        # https://github.com/pytorch/pytorch/issues/7178
+        chkpt = torch.load(args.checkpoint, map_location=map_location)
+        net.load_state_dict(chkpt)
 
     optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
 
