@@ -10,7 +10,7 @@ geojson
 mercantile
 osmium
 matplotlib
-rasterio>=1.0a12
+rasterio
 supermercado
 shapely
 rtree
