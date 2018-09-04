@@ -94,12 +94,11 @@ def main(args):
         for k, v in train_hist.items():
             history["train " + k].append(v)
 
-        with torch.no_grad():
-            val_hist = validate(val_loader, num_classes, device, net, criterion)
-            print("Validate loss: {:.4f}, mean IoU: {:.4f}".format(val_hist["loss"], val_hist["iou"]))
+        val_hist = validate(val_loader, num_classes, device, net, criterion)
+        print("Validate loss: {:.4f}, mean IoU: {:.4f}".format(val_hist["loss"], val_hist["iou"]))
 
-            for k, v in val_hist.items():
-                history["val " + k].append(v)
+        for k, v in val_hist.items():
+            history["val " + k].append(v)
 
         visual = "history-{:05d}-of-{:05d}.png".format(epoch + 1, num_epochs)
         plot(os.path.join(model["common"]["checkpoint"], visual), history)
@@ -147,6 +146,7 @@ def train(loader, num_classes, device, net, optimizer, criterion):
     return {"loss": running_loss / num_samples, "iou": iou.get()}
 
 
+@torch.no_grad()
 def validate(loader, num_classes, device, net, criterion):
     num_samples = 0
     running_loss = 0
