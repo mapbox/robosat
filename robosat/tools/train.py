@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import collections
+from contextlib import contextmanager
 
 from PIL import Image
 
@@ -30,6 +31,11 @@ from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
 
+
+@contextmanager
+def no_grad():
+    with torch.no_grad():
+        yield
 
 def add_parser(subparser):
     parser = subparser.add_parser(
@@ -146,7 +152,7 @@ def train(loader, num_classes, device, net, optimizer, criterion):
     return {"loss": running_loss / num_samples, "iou": iou.get()}
 
 
-@torch.no_grad()
+@no_grad()
 def validate(loader, num_classes, device, net, criterion):
     num_samples = 0
     running_loss = 0
