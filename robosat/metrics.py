@@ -29,8 +29,15 @@ class MeanIoU:
 
         confusion = predicted / actual
 
-        matrix = np.array([[ torch.sum(torch.isnan(confusion)).item(), torch.sum(confusion == float('inf')).item() ],
-                           [ torch.sum(confusion == 0).item(),         torch.sum(confusion == 1).item() ]])
+        matrix = np.array(
+            [
+                [
+                    torch.sum(torch.isnan(confusion)).item(),
+                    torch.sum(confusion == float("inf")).item(),
+                ],
+                [torch.sum(confusion == 0).item(), torch.sum(confusion == 1).item()],
+            ]
+        )
 
         if self.confusion_matrix is None:
             self.confusion_matrix = matrix
