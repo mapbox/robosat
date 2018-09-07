@@ -1,7 +1,6 @@
 torchvision
 numpy
 pillow
-scikit-learn
 scipy
 opencv-contrib-python
 tqdm

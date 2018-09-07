@@ -31,7 +31,6 @@ pytz==2018.4
 rasterio==1.0b1
 requests==2.18.4
 Rtree==0.8.3
-scikit-learn==0.19.1
 scipy==1.1.0
 Shapely==1.6.4.post1
 six==1.11.0
