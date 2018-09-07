@@ -1,8 +1,8 @@
 """Metrics for segmentation.
 """
 
+import torch
 import numpy as np
-import sklearn.metrics
 
 
 class MeanIoU:
@@ -27,7 +27,10 @@ class MeanIoU:
           predicted: the predicted labels.
         """
 
-        matrix = sklearn.metrics.confusion_matrix(actual, predicted, labels=self.labels)
+        confusion = predicted / actual
+
+        matrix = np.array([[ torch.sum(torch.isnan(confusion)).item(), torch.sum(confusion == float('inf')).item() ],
+                           [ torch.sum(confusion == 0).item(),         torch.sum(confusion == 1).item() ]])
 
         if self.confusion_matrix is None:
             self.confusion_matrix = matrix
