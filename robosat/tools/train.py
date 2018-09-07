@@ -45,6 +45,7 @@ def add_parser(subparser):
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
+    parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
 
     parser.set_defaults(func=main)
 
@@ -85,7 +86,7 @@ def main(args):
     criterion = CrossEntropyLoss2d(weight=weight).to(device)
     # criterion = FocalLoss2d(weight=weight).to(device)
 
-    train_loader, val_loader = get_dataset_loaders(model, dataset)
+    train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
 
     num_epochs = model["opt"]["epochs"]
 
@@ -143,9 +144,9 @@ def train(loader, num_classes, device, net, optimizer, criterion):
         running_loss += loss.item()
 
         for mask, output in zip(masks, outputs):
-            mask = mask.data.cpu().numpy()
-            prediction = output.data.max(0)[1].cpu().numpy()
-            iou.add(mask.ravel(), prediction.ravel())
+            prediction = output.detach()
+            prediction.requires_grad = False
+            iou.add(mask.float(), prediction.max(0)[1].float())
 
     assert num_samples > 0, "dataset contains training images and labels"
 
@@ -179,16 +180,14 @@ def validate(loader, num_classes, device, net, criterion):
         running_loss += loss.item()
 
         for mask, output in zip(masks, outputs):
-            mask = mask.data.cpu().numpy()
-            prediction = output.data.max(0)[1].cpu().numpy()
-            iou.add(mask.ravel(), prediction.ravel())
+            iou.add(mask.float(), output.max(0)[1].float())
 
     assert num_samples > 0, "dataset contains validation images and labels"
 
     return {"loss": running_loss / num_samples, "iou": iou.get()}
 
 
-def get_dataset_loaders(model, dataset):
+def get_dataset_loaders(model, dataset, workers):
     target_size = (model["common"]["image_size"],) * 2
     batch_size = model["common"]["batch_size"]
     path = dataset["common"]["dataset"]
@@ -217,7 +216,7 @@ def get_dataset_loaders(model, dataset):
         [os.path.join(path, "validation", "images")], os.path.join(path, "validation", "labels"), transform
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=workers)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=workers)
 
     return train_loader, val_loader
