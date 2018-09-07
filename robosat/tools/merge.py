@@ -66,8 +66,15 @@ def main(args):
 
         if merged.is_valid:
             # Orient exterior ring of the polygon in counter-clockwise direction.
-            merged = shapely.geometry.polygon.orient(merged, sign=1.0)
-
+            if (isinstance(merged, shapely.geometry.polygon.Polygon)):
+                merged = shapely.geometry.polygon.orient(merged, sign=1.0)
+            elif (isinstance(merged, shapely.geometry.multipolygon.MultiPolygon)):
+                merged = [shapely.geometry.polygon.orient(geom, sign=1.0) for geom in merged.geoms]
+                merged = shapely.geometry.MultiPolygon(merged)
+            else:
+                print("Warning: merged feature is neither Polygon nor MultiPoylgon, skipping", file=sys.stderr)
+                continue
+                
             # equal-area projection; round to full m^2, we're not that precise anyway
             area = int(round(project(merged, "epsg:4326", "esri:54009").area))
 
