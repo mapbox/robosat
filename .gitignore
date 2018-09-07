@@ -1,5 +1,6 @@
 .env
 .python-version
+.idea
 __pycache__
 test
 data
