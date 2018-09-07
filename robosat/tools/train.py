@@ -46,6 +46,7 @@ def add_parser(subparser):
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
+    parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
 
     parser.set_defaults(func=main)
 
@@ -77,6 +78,7 @@ def main(args):
         def map_location(storage, _):
             return storage.cuda() if model["common"]["cuda"] else storage.cpu()
 
+        # https://github.com/pytorch/pytorch/issues/7178
         chkpt = torch.load(args.checkpoint, map_location=map_location)
         net.load_state_dict(chkpt)
 
@@ -146,6 +148,7 @@ def train(loader, num_classes, device, net, optimizer, criterion):
 
         for mask, output in zip(masks, outputs):
             prediction = output.detach()
+            prediction.requires_grad = False
             iou.add(mask.float(), prediction.max(0)[1].float())
 
     assert num_samples > 0, "dataset contains training images and labels"
