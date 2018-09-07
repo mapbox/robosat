@@ -2,10 +2,11 @@ import argparse
 
 from robosat.osm.parking import ParkingHandler
 from robosat.osm.building import BuildingHandler
+from robosat.osm.road import RoadHandler
 
 # Register your osmium handlers here; in addition to the osmium handler interface
 # they need to support a `save(path)` function for GeoJSON serialization to a file.
-handlers = {"parking": ParkingHandler, "building": BuildingHandler}
+handlers = {"parking": ParkingHandler, "building": BuildingHandler, "road": RoadHandler}
 
 
 def add_parser(subparser):
