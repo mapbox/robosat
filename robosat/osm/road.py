@@ -31,6 +31,89 @@ class RoadHandler(osmium.SimpleHandler):
             "tertiary_link"
         }
 
+    highway_attributes = {
+        'motorway': {
+            'lanes': 4,
+            'lane_width': 3.75,
+            'left_hard_shoulder_width': 0.75,
+            'right_hard_shoulder_width': 3.0
+        },
+        'trunk': { 
+            'lanes': 3,
+            'lane_width': 3.75,
+            'left_hard_shoulder_width': 0.75,
+            'right_hard_shoulder_width': 3.0
+        },
+        'primary': { 
+            'lanes': 2,
+            'lane_width': 3.75,
+            'left_hard_shoulder_width': 0.50,
+            'right_hard_shoulder_width': 1.50
+        },
+        'secondary': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.75
+        },
+        'tertiary': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.75
+        },
+        'unclassified': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.00
+        },
+        'residential': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.75
+        },
+        'service': { 
+            'lanes': 1,
+            'lane_width': 3.00,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.00
+        },
+        'motorway_link': { 
+            'lanes': 2,
+            'lane_width': 3.75,
+            'left_hard_shoulder_width': 0.75,
+            'right_hard_shoulder_width': 3.00
+        },
+        'trunk_link': { 
+            'lanes': 2,
+            'lane_width': 3.75,
+            'left_hard_shoulder_width': 0.50,
+            'right_hard_shoulder_width': 1.50
+        },
+        'primary_link': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.75
+        },
+        'secondary_link': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.75
+        },
+        'tertiary_link': { 
+            'lanes': 1,
+            'lane_width': 3.50,
+            'left_hard_shoulder_width': 0.00,
+            'right_hard_shoulder_width': 0.00
+        }
+    }
+
+    EARTH_MEAN_RADIUS = 6371004.0
+
     def __init__(self):
         super().__init__()
         self.features = []
@@ -42,76 +125,10 @@ class RoadHandler(osmium.SimpleHandler):
         if w.tags["highway"] not in self.road_filter():
             return
 
-        left_hard_shoulder_width = 0.0
-        lane_width = 3.0
-        lanes = 1
-        right_hard_shoulder_width = 0.0
-
-        if w.tags["highway"] == "motorway":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.75
-            lanes = 4
-            right_hard_shoulder_width = 3.0
-        elif w.tags["highway"] == "trunk":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.75
-            lanes = 3
-            right_hard_shoulder_width = 3.0
-        elif w.tags["highway"] == "primary":
-            left_hard_shoulder_width = 0.50
-            lane_width = 3.75
-            lanes = 2
-            right_hard_shoulder_width = 1.50
-        elif w.tags["highway"] == "secondary":
-            left_hard_shoulder_width = 0.00
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.75
-        elif w.tags["highway"] == "tertiary":
-            left_hard_shoulder_width = 0.00
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.75
-        elif w.tags["highway"] == "unclassified":
-            left_hard_shoulder_width = 0.00
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.00
-        elif w.tags["highway"] == "residential":
-            left_hard_shoulder_width = 0.00
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.75
-        elif w.tags["highway"] == "service":
-            left_hard_shoulder_width = 0.00
-            lane_width = 3.00
-            lanes = 1
-            right_hard_shoulder_width = 0.00
-        elif w.tags["highway"] == "motorway_link":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.75
-            lanes = 2
-            right_hard_shoulder_width = 3.00
-        elif w.tags["highway"] == "trunk_link":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.75
-            lanes = 2
-            right_hard_shoulder_width = 1.50
-        elif w.tags["highway"] == "primary_link":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.75
-        elif w.tags["highway"] == "secondary_link":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.75
-        elif w.tags["highway"] == "tertiary_link":
-            left_hard_shoulder_width = 0.75
-            lane_width = 3.50
-            lanes = 1
-            right_hard_shoulder_width = 0.00
+        left_hard_shoulder_width = self.highway_attributes[w.tags["highway"]]['left_hard_shoulder_width']
+        lane_width = self.highway_attributes[w.tags["highway"]]['lane_width']
+        lanes = self.highway_attributes[w.tags["highway"]]['lanes']
+        right_hard_shoulder_width = self.highway_attributes[w.tags["highway"]]['right_hard_shoulder_width']
 
         if "oneway" not in w.tags:
             lanes = lanes * 2
@@ -128,7 +145,7 @@ class RoadHandler(osmium.SimpleHandler):
 
         geometry = geojson.LineString([(n.lon, n.lat) for n in w.nodes])
         shape = shapely.geometry.shape(geometry)
-        geometry_buffer = shape.buffer(math.degrees(road_width / 2.0 / 6371004.0))
+        geometry_buffer = shape.buffer(math.degrees(road_width / 2.0 / self.EARTH_MEAN_RADIUS))
 
         if shape.is_valid:
             feature = geojson.Feature(geometry=shapely.geometry.mapping(geometry_buffer))
