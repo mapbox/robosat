@@ -66,9 +66,9 @@ def main(args):
 
         if merged.is_valid:
             # Orient exterior ring of the polygon in counter-clockwise direction.
-            if (isinstance(merged, shapely.geometry.polygon.Polygon)):
+            if isinstance(merged, shapely.geometry.polygon.Polygon):
                 merged = shapely.geometry.polygon.orient(merged, sign=1.0)
-            elif (isinstance(merged, shapely.geometry.multipolygon.MultiPolygon)):
+            elif isinstance(merged, shapely.geometry.multipolygon.MultiPolygon):
                 merged = [shapely.geometry.polygon.orient(geom, sign=1.0) for geom in merged.geoms]
                 merged = shapely.geometry.MultiPolygon(merged)
             else:
