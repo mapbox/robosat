@@ -145,7 +145,6 @@ def train(loader, num_classes, device, net, optimizer, criterion):
 
         for mask, output in zip(masks, outputs):
             prediction = output.detach()
-            prediction.requires_grad = False
             iou.add(mask.float(), prediction.max(0)[1].float())
 
     assert num_samples > 0, "dataset contains training images and labels"
