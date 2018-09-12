@@ -37,6 +37,7 @@ def no_grad():
     with torch.no_grad():
         yield
 
+
 def add_parser(subparser):
     parser = subparser.add_parser(
         "train", help="trains model on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -73,8 +74,10 @@ def main(args):
         torch.backends.cudnn.benchmark = True
 
     if args.checkpoint:
+
         def map_location(storage, _):
             return storage.cuda() if model["common"]["cuda"] else storage.cpu()
+
         # https://github.com/pytorch/pytorch/issues/7178
         chkpt = torch.load(args.checkpoint, map_location=map_location)
         net.load_state_dict(chkpt)

@@ -74,7 +74,7 @@ def main(args):
             else:
                 print("Warning: merged feature is neither Polygon nor MultiPoylgon, skipping", file=sys.stderr)
                 continue
-                
+
             # equal-area projection; round to full m^2, we're not that precise anyway
             area = int(round(project(merged, "epsg:4326", "esri:54009").area))
 
