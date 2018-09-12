@@ -12,7 +12,6 @@ class RoadHandler(osmium.SimpleHandler):
     """Extracts road polygon features (visible in satellite imagery) from the map.
     """
 
-    #  highway=* to discard because these features are not vislible in satellite imagery
     highway_attributes = {
         "motorway": {
             "lanes": 4,
@@ -126,15 +125,8 @@ class RoadHandler(osmium.SimpleHandler):
         if "lanes" in w.tags:
             try:
                 lanes = int(w.tags["lanes"])
-            except ValueError as e:
-                print(
-                    "ValueError: ",
-                    e,
-                    " Invalid road lanes property: https://www.openstreetmap.org/way/{}".format(
-                        w.id
-                    ),
-                    file=sys.stderr,
-                )
+            except:
+                print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
         road_width = (
             left_hard_shoulder_width + lane_width * lanes + right_hard_shoulder_width
@@ -143,15 +135,8 @@ class RoadHandler(osmium.SimpleHandler):
         if "width" in w.tags:
             try:
                 road_width = float(w.tags["width"])
-            except ValueError as e:
-                print(
-                    "ValueError: ",
-                    e,
-                    " Invalid road width property: https://www.openstreetmap.org/way/{}".format(
-                        w.id
-                    ),
-                    file=sys.stderr,
-                )
+            except:
+                print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
         geometry = geojson.LineString([(n.lon, n.lat) for n in w.nodes])
         shape = shapely.geometry.shape(geometry)
@@ -165,12 +150,7 @@ class RoadHandler(osmium.SimpleHandler):
             )
             self.features.append(feature)
         else:
-            print(
-                "Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(
-                    w.id
-                ),
-                file=sys.stderr,
-            )
+            print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
     def save(self, out):
         collection = geojson.FeatureCollection(self.features)
