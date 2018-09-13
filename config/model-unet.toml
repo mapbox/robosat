@@ -29,3 +29,6 @@
 
   # Weight decay l2 penalty for the optimizer
   decay      = 0.0001
+
+  # Loss function name (e.g 'CrossEntropy', 'mIoU', or 'Focal')
+  loss       = 'CrossEntropy'

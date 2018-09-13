@@ -26,7 +26,7 @@ from robosat.transforms import (
 )
 from robosat.datasets import SlippyMapTilesConcatenation
 from robosat.metrics import Metrics
-from robosat.losses import CrossEntropyLoss2d
+from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d
 from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
@@ -86,8 +86,14 @@ def main(args):
 
     weight = torch.Tensor(dataset["weights"]["values"])
 
-    criterion = CrossEntropyLoss2d(weight=weight).to(device)
-    # criterion = FocalLoss2d(weight=weight).to(device)
+    if model["opt"]["loss"] == "CrossEntropy":
+        criterion = CrossEntropyLoss2d(weight=weight).to(device)
+    elif model["opt"]["loss"] == "mIoU":
+        criterion = mIoULoss2d(weight=weight).to(device)
+    elif model["opt"]["loss"] == "Focal":
+        criterion = FocalLoss2d(weight=weight).to(device)
+    else:
+        sys.exit("Error: Unknown [opt][loss] value !")
 
     train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
 
