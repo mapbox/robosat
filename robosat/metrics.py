@@ -5,19 +5,23 @@ import torch
 import numpy as np
 
 
-class MeanIoU:
-    """Tracking mean intersection over union.
+class Metrics:
+    """Tracking mean metrics
     """
 
     def __init__(self, labels):
-        """Creates an new `MeanIoU` instance.
+        """Creates an new `Metrics` instance.
 
         Args:
           labels: the labels for all classes.
         """
 
         self.labels = labels
-        self.confusion_matrix = None
+
+        self.tn = 0
+        self.fn = 0
+        self.fp = 0
+        self.tp = 0
 
     def add(self, actual, predicted):
         """Adds an observation to the tracker.
@@ -27,42 +31,31 @@ class MeanIoU:
           predicted: the predicted labels.
         """
 
-        confusion = predicted / actual
+        masks = torch.argmax(predicted, 0)
+        confusion = masks.view(-1).float() / actual.view(-1).float()
 
-        tn = torch.sum(torch.isnan(confusion)).item()
-        fn = torch.sum(confusion == float("inf")).item()
-        fp = torch.sum(confusion == 0).item()
-        tp = torch.sum(confusion == 1).item()
+        self.tn += torch.sum(torch.isnan(confusion)).item()
+        self.fn += torch.sum(confusion == float("inf")).item()
+        self.fp += torch.sum(confusion == 0).item()
+        self.tp += torch.sum(confusion == 1).item()
 
-        matrix = np.array([[tn, fn], [fp, tp]])
-
-        if self.confusion_matrix is None:
-            self.confusion_matrix = matrix
-        else:
-            self.confusion_matrix += matrix
-
-    def get(self):
-        """Retrieves the mean intersection over union score.
+    def get_iou(self):
+        """Retrieves the mean Intersection over Union score.
 
         Returns:
-          The mean intersection over union score for all obersations seen so far.
+          The mean Intersection over Union score for all observations seen so far.
         """
 
-        intersection = np.diag(self.confusion_matrix)
+        return np.nanmean([(self.tp / (self.tp + self.fn + self.fp)), (self.tn / (self.tn + self.fn + self.fp))])
 
-        actual = self.confusion_matrix.sum(axis=1)
-        predicted = self.confusion_matrix.sum(axis=0)
+    def get_acc(self):
+        """Retrieves the pixel accuracy score.
 
-        union = actual + predicted - intersection
+        Returns:
+          The pixel accuracy score for all observations seen so far.
+        """
 
-        iou = intersection / union.astype(np.float32)
-        return np.nanmean(iou)
-
+        return (self.tp + self.tn) / (self.tp + self.tn + self.fn + self.fp)
 
 # Todo:
-# - implement pixel accuracy
-# - implement iou on a per-class basis (not mean'ed)
-
-# intersection = np.diag(self.confusion_matrix)
-# accuracy = intersection.sum() / self.confusion_matrix.sum()
-# mean_cls_accuracy = np.nanmean(intersection / self.confusion_matrix.sum(axis=1))
+# - Rewrite mIoU to handle N classes (and not only binary SemSeg)

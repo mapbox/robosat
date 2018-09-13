@@ -25,7 +25,7 @@ from robosat.transforms import (
     MaskToTensor,
 )
 from robosat.datasets import SlippyMapTilesConcatenation
-from robosat.metrics import MeanIoU
+from robosat.metrics import Metrics
 from robosat.losses import CrossEntropyLoss2d
 from robosat.unet import UNet
 from robosat.utils import plot
@@ -99,13 +99,21 @@ def main(args):
         print("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
-        print("Train loss: {:.4f}, mean IoU: {:.4f}".format(train_hist["loss"], train_hist["iou"]))
+        print(
+            "Train loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
+                train_hist["loss"], train_hist["iou"], train_hist["acc"]
+            )
+        )
 
         for k, v in train_hist.items():
             history["train " + k].append(v)
 
         val_hist = validate(val_loader, num_classes, device, net, criterion)
-        print("Validate loss: {:.4f}, mean IoU: {:.4f}".format(val_hist["loss"], val_hist["iou"]))
+        print(
+            "Validate loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
+                val_hist["loss"], val_hist["iou"], val_hist["acc"]
+            )
+        )
 
         for k, v in val_hist.items():
             history["val " + k].append(v)
@@ -121,7 +129,7 @@ def train(loader, num_classes, device, net, optimizer, criterion):
     num_samples = 0
     running_loss = 0
 
-    iou = MeanIoU(range(num_classes))
+    metrics = Metrics(range(num_classes))
 
     net.train()
 
@@ -148,11 +156,11 @@ def train(loader, num_classes, device, net, optimizer, criterion):
 
         for mask, output in zip(masks, outputs):
             prediction = output.detach()
-            iou.add(mask.float(), prediction.max(0)[1].float())
+            metrics.add(mask, prediction)
 
     assert num_samples > 0, "dataset contains training images and labels"
 
-    return {"loss": running_loss / num_samples, "iou": iou.get()}
+    return {"loss": running_loss / num_samples, "iou": metrics.get_iou(), "acc": metrics.get_acc()}
 
 
 @no_grad()
@@ -160,7 +168,7 @@ def validate(loader, num_classes, device, net, criterion):
     num_samples = 0
     running_loss = 0
 
-    iou = MeanIoU(range(num_classes))
+    metrics = Metrics(range(num_classes))
 
     net.eval()
 
@@ -182,11 +190,11 @@ def validate(loader, num_classes, device, net, criterion):
         running_loss += loss.item()
 
         for mask, output in zip(masks, outputs):
-            iou.add(mask.float(), output.max(0)[1].float())
+            metrics.add(mask, output)
 
     assert num_samples > 0, "dataset contains validation images and labels"
 
-    return {"loss": running_loss / num_samples, "iou": iou.get()}
+    return {"loss": running_loss / num_samples, "iou": metrics.get_iou(), "acc": metrics.get_acc()}
 
 
 def get_dataset_loaders(model, dataset, workers):
