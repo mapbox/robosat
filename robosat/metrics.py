@@ -39,14 +39,29 @@ class Metrics:
         self.fp += torch.sum(confusion == 0).item()
         self.tp += torch.sum(confusion == 1).item()
 
-    def get_iou(self):
+    def get_m_iou(self):
         """Retrieves the mean Intersection over Union score.
 
         Returns:
           The mean Intersection over Union score for all observations seen so far.
         """
+        return np.nanmean([self.get_bg_iou(), self.get_fg_iou()])
 
-        return np.nanmean([(self.tp / (self.tp + self.fn + self.fp)), (self.tn / (self.tn + self.fn + self.fp))])
+    def get_fg_iou(self):
+        """Retrieves the foreground Intersection over Union score.
+
+        Returns:
+          The foreground Intersection over Union score for all observations seen so far.
+        """
+        return self.tp / (self.tp + self.fn + self.fp)
+
+    def get_bg_iou(self):
+        """Retrieves the background Intersection over Union score.
+
+        Returns:
+          The background Intersection over Union score for all observations seen so far.
+        """
+        return self.tn / (self.tn + self.fn + self.fp)
 
     def get_acc(self):
         """Retrieves the pixel accuracy score.
@@ -54,8 +69,8 @@ class Metrics:
         Returns:
           The pixel accuracy score for all observations seen so far.
         """
-
         return (self.tp + self.tn) / (self.tp + self.tn + self.fn + self.fp)
+
 
 # Todo:
 # - Rewrite mIoU to handle N classes (and not only binary SemSeg)

@@ -121,8 +121,8 @@ def main(args):
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
         log(
             fp,
-            "Train    loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
-                train_hist["loss"], train_hist["iou"], train_hist["acc"]
+            "Train    loss: {:.4f}, mIoU: {:.4f}, fgIoU: {:.4f}, acc: {:.4f}".format(
+                train_hist["loss"], train_hist["m_iou"], train_hist["fg_iou"], train_hist["acc"]
             ),
         )
 
@@ -132,8 +132,8 @@ def main(args):
         val_hist = validate(val_loader, num_classes, device, net, criterion)
         log(
             fp,
-            "Validate loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
-                val_hist["loss"], val_hist["iou"], val_hist["acc"]
+            "Validate loss: {:.4f}, mIoU: {:.4f}, fgIoU: {:.4f}, acc: {:.4f}".format(
+                val_hist["loss"], val_hist["m_iou"], val_hist["fg_iou"], val_hist["acc"]
             ),
         )
 
@@ -185,7 +185,12 @@ def train(loader, num_classes, device, net, optimizer, criterion):
 
     assert num_samples > 0, "dataset contains training images and labels"
 
-    return {"loss": running_loss / num_samples, "iou": metrics.get_iou(), "acc": metrics.get_acc()}
+    return {
+        "loss": running_loss / num_samples,
+        "m_iou": metrics.get_m_iou(),
+        "fg_iou": metrics.get_fg_iou(),
+        "acc": metrics.get_acc(),
+    }
 
 
 @no_grad()
@@ -219,7 +224,12 @@ def validate(loader, num_classes, device, net, criterion):
 
     assert num_samples > 0, "dataset contains validation images and labels"
 
-    return {"loss": running_loss / num_samples, "iou": metrics.get_iou(), "acc": metrics.get_acc()}
+    return {
+        "loss": running_loss / num_samples,
+        "m_iou": metrics.get_m_iou(),
+        "fg_iou": metrics.get_fg_iou(),
+        "acc": metrics.get_acc(),
+    }
 
 
 def get_dataset_loaders(model, dataset, workers):
