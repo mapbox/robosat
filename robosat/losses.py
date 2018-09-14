@@ -3,7 +3,6 @@
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
 
 class CrossEntropyLoss2d(nn.Module):
@@ -47,7 +46,6 @@ class FocalLoss2d(nn.Module):
         """
 
         super().__init__()
-
         self.nll_loss = nn.NLLLoss(weight, size_average, ignore_index)
         self.gamma = gamma
 
@@ -72,7 +70,6 @@ class mIoULoss2d(nn.Module):
         """
 
         super().__init__()
-
         self.weight = weight
 
     def forward(self, inputs, targets):
