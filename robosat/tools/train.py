@@ -52,6 +52,12 @@ def add_parser(subparser):
     parser.set_defaults(func=main)
 
 
+def log(fp, msg):
+    print(msg)
+    fp.write(msg + "\n")
+    fp.flush()
+
+
 def main(args):
     model = load_config(args.model)
     dataset = load_config(args.dataset)
@@ -107,25 +113,28 @@ def main(args):
         sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
 
     history = collections.defaultdict(list)
+    fp = open(os.path.join(model["common"]["checkpoint"], "log"), "w")
 
     for epoch in range(resume, num_epochs):
-        print("Epoch: {}/{}".format(epoch + 1, num_epochs))
+        log(fp, "Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
-        print(
-            "Train loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
+        log(
+            fp,
+            "Train    loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
                 train_hist["loss"], train_hist["iou"], train_hist["acc"]
-            )
+            ),
         )
 
         for k, v in train_hist.items():
             history["train " + k].append(v)
 
         val_hist = validate(val_loader, num_classes, device, net, criterion)
-        print(
+        log(
+            fp,
             "Validate loss: {:.4f}, mIoU: {:.4f}, acc: {:.4f}".format(
                 val_hist["loss"], val_hist["iou"], val_hist["acc"]
-            )
+            ),
         )
 
         for k, v in val_hist.items():
