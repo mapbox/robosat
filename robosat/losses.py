@@ -55,7 +55,7 @@ class FocalLoss2d(nn.Module):
 
 
 class mIoULoss2d(nn.Module):
-    """mIoU Loss
+    """mIoU Loss.
 
     See:
       - http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
@@ -71,6 +71,7 @@ class mIoULoss2d(nn.Module):
 
         super().__init__()
         self.weight = weight
+        self.nll_loss = nn.NLLLoss(weight)
 
     def forward(self, inputs, targets):
 
@@ -84,5 +85,6 @@ class mIoULoss2d(nn.Module):
 
         weight = self.weight.to(targets.device)
         iou = (inters.view(C, -1).sum(1) * weight) / (unions.view(C, -1).sum(1) * weight)
+        miou = 1 - iou.mean()
 
-        return 1 - iou.mean()
+        return self.nll_loss(miou * nn.functional.log_softmax(inputs, dim=1), targets)
