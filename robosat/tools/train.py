@@ -46,6 +46,7 @@ def add_parser(subparser):
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
+    parser.add_argument("--resume", type=bool, default=False, help="resume training or fine-tuning (if checkpoint)")
     parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
 
     parser.set_defaults(func=main)
@@ -73,6 +74,10 @@ def main(args):
     if model["common"]["cuda"]:
         torch.backends.cudnn.benchmark = True
 
+    weight = torch.Tensor(dataset["weights"]["values"])
+    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
+
+    resume = 0
     if args.checkpoint:
 
         def map_location(storage, _):
@@ -80,11 +85,11 @@ def main(args):
 
         # https://github.com/pytorch/pytorch/issues/7178
         chkpt = torch.load(args.checkpoint, map_location=map_location)
-        net.load_state_dict(chkpt)
+        net.load_state_dict(chkpt["state_dict"])
 
-    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
-
-    weight = torch.Tensor(dataset["weights"]["values"])
+        if args.resume:
+            optimizer.load_state_dict(chkpt["optimizer"])
+            resume = chkpt["epoch"]
 
     if model["opt"]["loss"] == "CrossEntropy":
         criterion = CrossEntropyLoss2d(weight=weight).to(device)
@@ -98,10 +103,12 @@ def main(args):
     train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
 
     num_epochs = model["opt"]["epochs"]
+    if resume >= num_epochs:
+        sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
 
     history = collections.defaultdict(list)
 
-    for epoch in range(num_epochs):
+    for epoch in range(resume, num_epochs):
         print("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
@@ -128,7 +135,10 @@ def main(args):
         plot(os.path.join(model["common"]["checkpoint"], visual), history)
 
         checkpoint = "checkpoint-{:05d}-of-{:05d}.pth".format(epoch + 1, num_epochs)
-        torch.save(net.state_dict(), os.path.join(model["common"]["checkpoint"], checkpoint))
+
+        states = {"epoch": epoch + 1, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict()}
+
+        torch.save(states, os.path.join(model["common"]["checkpoint"], checkpoint))
 
 
 def train(loader, num_classes, device, net, optimizer, criterion):

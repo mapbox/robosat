@@ -186,7 +186,7 @@ class Predictor:
         if self.cuda:
             torch.backends.cudnn.benchmark = True
 
-        net.load_state_dict(chkpt)
+        net.load_state_dict(chkpt['state_dict'])
         net.eval()
 
         return net

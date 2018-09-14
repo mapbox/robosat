@@ -65,7 +65,7 @@ def main(args):
     if cuda:
         torch.backends.cudnn.benchmark = True
 
-    net.load_state_dict(chkpt)
+    net.load_state_dict(chkpt['state_dict'])
     net.eval()
 
     mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
