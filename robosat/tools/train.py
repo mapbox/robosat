@@ -52,10 +52,15 @@ def add_parser(subparser):
     parser.set_defaults(func=main)
 
 
-def log(fp, msg):
-    print(msg)
-    fp.write(msg + "\n")
-    fp.flush()
+class Log:
+    def __init__(self, path):
+        self.fp = open(path, "a")
+
+    def log(self, msg):
+        print(msg)
+        assert self.fp, "Unable to write in log file"
+        self.fp.write(msg + os.linesep)
+        self.fp.flush()
 
 
 def main(args):
@@ -113,28 +118,39 @@ def main(args):
         sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
 
     history = collections.defaultdict(list)
-    fp = open(os.path.join(model["common"]["checkpoint"], "log"), "w")
+    log = Log(os.path.join(model["common"]["checkpoint"], "log"))
+
+    log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
+    log.log("Batch Size:\t {}".format(model["common"]["batch_size"]))
+    log.log("Image Size:\t {}".format(model["common"]["image_size"]))
+    log.log("Learning Rate:\t {}".format(model["opt"]["lr"]))
+    log.log("LR Decay:\t {}".format(model["opt"]["decay"]))
+    log.log("Loss :\t\t {}".format(model["opt"]["loss"]))
+    log.log("Weights :\t {}".format(dataset["weights"]["values"]))
+    log.log("---")
 
     for epoch in range(resume, num_epochs):
-        log(fp, "Epoch: {}/{}".format(epoch + 1, num_epochs))
+        log.log("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
-        log(
-            fp,
-            "Train    loss: {:.4f}, mIoU: {:.4f}, fgIoU: {:.4f}, acc: {:.4f}".format(
-                train_hist["loss"], train_hist["m_iou"], train_hist["fg_iou"], train_hist["acc"]
-            ),
+        log.log(
+            "Train    loss: {:.4f}, mIoU: {:.3f}, {} IoU: {:.3f}, MCC: {:.3f}".format(
+                train_hist["loss"],
+                train_hist["miou"],
+                dataset["common"]["classes"][1],
+                train_hist["fg_iou"],
+                train_hist["mcc"],
+            )
         )
 
         for k, v in train_hist.items():
             history["train " + k].append(v)
 
         val_hist = validate(val_loader, num_classes, device, net, criterion)
-        log(
-            fp,
-            "Validate loss: {:.4f}, mIoU: {:.4f}, fgIoU: {:.4f}, acc: {:.4f}".format(
-                val_hist["loss"], val_hist["m_iou"], val_hist["fg_iou"], val_hist["acc"]
-            ),
+        log.log(
+            "Validate loss: {:.4f}, mIoU: {:.3f}, {} IoU: {:.3f}, MCC: {:.3f}".format(
+                val_hist["loss"], val_hist["miou"], dataset["common"]["classes"][1], val_hist["fg_iou"], val_hist["mcc"]
+            )
         )
 
         for k, v in val_hist.items():
@@ -187,9 +203,9 @@ def train(loader, num_classes, device, net, optimizer, criterion):
 
     return {
         "loss": running_loss / num_samples,
-        "m_iou": metrics.get_m_iou(),
+        "miou": metrics.get_miou(),
         "fg_iou": metrics.get_fg_iou(),
-        "acc": metrics.get_acc(),
+        "mcc": metrics.get_mcc(),
     }
 
 
@@ -226,9 +242,9 @@ def validate(loader, num_classes, device, net, criterion):
 
     return {
         "loss": running_loss / num_samples,
-        "m_iou": metrics.get_m_iou(),
+        "miou": metrics.get_miou(),
         "fg_iou": metrics.get_fg_iou(),
-        "acc": metrics.get_acc(),
+        "mcc": metrics.get_mcc(),
     }
 
 
