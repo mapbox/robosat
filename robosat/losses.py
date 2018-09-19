@@ -66,7 +66,6 @@ class mIoULoss2d(nn.Module):
         """
 
         super().__init__()
-        self.weight = weight
         self.nll_loss = nn.NLLLoss(weight)
 
     def forward(self, inputs, targets):
@@ -79,8 +78,6 @@ class mIoULoss2d(nn.Module):
         inters = softs * masks
         unions = (softs + masks) - (softs * masks)
 
-        weight = self.weight.to(targets.device)
-        iou = (inters.view(C, -1).sum(1) * weight) / (unions.view(C, -1).sum(1) * weight)
-        miou = 1 - iou.mean()
+        miou = 1 - (inters.view(C, N, -1).sum(2) / unions.view(C, N, -1).sum(2)).mean()
 
-        return self.nll_loss(miou * nn.functional.log_softmax(inputs, dim=1), targets)
+        return max(miou, self.nll_loss(nn.functional.log_softmax(inputs, dim=1), targets))
