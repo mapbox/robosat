@@ -26,7 +26,7 @@ from robosat.transforms import (
 )
 from robosat.datasets import SlippyMapTilesConcatenation
 from robosat.metrics import Metrics
-from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d
+from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d, LovaszLoss2d
 from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
@@ -108,6 +108,8 @@ def main(args):
         criterion = mIoULoss2d(weight=weight).to(device)
     elif model["opt"]["loss"] == "Focal":
         criterion = FocalLoss2d(weight=weight).to(device)
+    elif model["opt"]["loss"] == "Lovasz":
+        criterion = LovaszLoss2d().to(device)
     else:
         sys.exit("Error: Unknown [opt][loss] value !")
 
