@@ -30,6 +30,7 @@ from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d, LovaszLo
 from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
+from robosat.log import Log
 
 
 @contextmanager
@@ -50,17 +51,6 @@ def add_parser(subparser):
     parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
 
     parser.set_defaults(func=main)
-
-
-class Log:
-    def __init__(self, path):
-        self.fp = open(path, "a")
-
-    def log(self, msg):
-        print(msg)
-        assert self.fp, "Unable to write in log file"
-        self.fp.write(msg + os.linesep)
-        self.fp.flush()
 
 
 def main(args):
