@@ -2,6 +2,7 @@
 """
 
 import os
+import sys
 
 
 class Log:
@@ -9,12 +10,12 @@ class Log:
     """Create a log instance on a log file
     """
 
-    def __init__(self, path, stdout=True):
-        self.stdout = stdout
+    def __init__(self, path, out=sys.stdout):
+        self.out = out
         self.fp = open(path, "a")
         assert self.fp, "Unable to open log file"
 
-    """Log a new message to the opened log file, and optionnaly on stdout too
+    """Log a new message to the opened log file, and optionnaly on stdout or stderr too
     """
 
     def log(self, msg):
@@ -22,5 +23,5 @@ class Log:
         self.fp.write(msg + os.linesep)
         self.fp.flush()
 
-        if self.stdout:
-            print(msg)
+        if self.out:
+            print(msg, file=self.out)
