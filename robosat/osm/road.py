@@ -19,12 +19,7 @@ class RoadHandler(osmium.SimpleHandler):
             "left_hard_shoulder_width": 0.75,
             "right_hard_shoulder_width": 3.0,
         },
-        "trunk": {
-            "lanes": 3,
-            "lane_width": 3.75,
-            "left_hard_shoulder_width": 0.75,
-            "right_hard_shoulder_width": 3.0,
-        },
+        "trunk": {"lanes": 3, "lane_width": 3.75, "left_hard_shoulder_width": 0.75, "right_hard_shoulder_width": 3.0},
         "primary": {
             "lanes": 2,
             "lane_width": 3.75,
@@ -108,14 +103,10 @@ class RoadHandler(osmium.SimpleHandler):
         if w.tags["highway"] not in self.road_filter:
             return
 
-        left_hard_shoulder_width = self.highway_attributes[w.tags["highway"]][
-            "left_hard_shoulder_width"
-        ]
+        left_hard_shoulder_width = self.highway_attributes[w.tags["highway"]]["left_hard_shoulder_width"]
         lane_width = self.highway_attributes[w.tags["highway"]]["lane_width"]
         lanes = self.highway_attributes[w.tags["highway"]]["lanes"]
-        right_hard_shoulder_width = self.highway_attributes[w.tags["highway"]][
-            "right_hard_shoulder_width"
-        ]
+        right_hard_shoulder_width = self.highway_attributes[w.tags["highway"]]["right_hard_shoulder_width"]
 
         if "oneway" not in w.tags:
             lanes = lanes * 2
@@ -134,9 +125,7 @@ class RoadHandler(osmium.SimpleHandler):
             except:
                 print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
-        road_width = (
-            left_hard_shoulder_width + lane_width * lanes + right_hard_shoulder_width
-        )
+        road_width = left_hard_shoulder_width + lane_width * lanes + right_hard_shoulder_width
 
         if "width" in w.tags:
             try:
@@ -150,14 +139,10 @@ class RoadHandler(osmium.SimpleHandler):
 
         geometry = geojson.LineString([(n.lon, n.lat) for n in w.nodes])
         shape = shapely.geometry.shape(geometry)
-        geometry_buffer = shape.buffer(
-            math.degrees(road_width / 2.0 / self.EARTH_MEAN_RADIUS)
-        )
+        geometry_buffer = shape.buffer(math.degrees(road_width / 2.0 / self.EARTH_MEAN_RADIUS))
 
         if shape.is_valid:
-            feature = geojson.Feature(
-                geometry=shapely.geometry.mapping(geometry_buffer)
-            )
+            feature = geojson.Feature(geometry=shapely.geometry.mapping(geometry_buffer))
             self.features.append(feature)
         else:
             print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
