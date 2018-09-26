@@ -5,8 +5,6 @@ import osmium
 import geojson
 import shapely.geometry
 
-from robosat.osm.core import is_polygon
-
 
 class RoadHandler(osmium.SimpleHandler):
     """Extracts road polygon features (visible in satellite imagery) from the map.
@@ -122,7 +120,7 @@ class RoadHandler(osmium.SimpleHandler):
                 # https://wiki.openstreetmap.org/wiki/Tag:busway%3Dlane
                 # https://wiki.openstreetmap.org/wiki/Tag:cycleway%3Dlane
                 # https://wiki.openstreetmap.org/wiki/Key:parking:lane
-            except:
+            except ValueError:
                 print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
         road_width = left_hard_shoulder_width + lane_width * lanes + right_hard_shoulder_width
@@ -130,11 +128,11 @@ class RoadHandler(osmium.SimpleHandler):
         if "width" in w.tags:
             try:
                 # At least one meter wide, for road classes specified above
-                road_width = max(float(w.tags["width"]), 1)
+                road_width = max(float(w.tags["width"]), 1.0)
 
                 # Todo: handle optional units such as "2 m"
                 # https://wiki.openstreetmap.org/wiki/Key:width
-            except:
+            except ValueError:
                 print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
         geometry = geojson.LineString([(n.lon, n.lat) for n in w.nodes])
