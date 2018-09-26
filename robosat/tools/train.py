@@ -75,7 +75,12 @@ def main(args):
     if model["common"]["cuda"]:
         torch.backends.cudnn.benchmark = True
 
-    weight = torch.Tensor(dataset["weights"]["values"])
+    try:
+        weight = torch.Tensor(dataset["weights"]["values"])
+    except KeyError:
+        if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
+            sys.exit("Error: The loss function used, need dataset weights values")
+
     optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
 
     resume = 0
@@ -113,12 +118,13 @@ def main(args):
     log = Log(os.path.join(model["common"]["checkpoint"], "log"))
 
     log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
-    log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
-    log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
-    log.log("Learning Rate:\t\t {}".format(model["opt"]["lr"]))
-    log.log("Adam Weight Decay:\t {}".format(model["opt"]["decay"]))
-    log.log("Loss :\t\t\t {}".format(model["opt"]["loss"]))
-    log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
+    log.log("Batch Size:\t {}".format(model["common"]["batch_size"]))
+    log.log("Image Size:\t {}".format(model["common"]["image_size"]))
+    log.log("Learning Rate:\t {}".format(model["opt"]["lr"]))
+    log.log("Weight Decay:\t {}".format(model["opt"]["decay"]))
+    log.log("Loss function:\t {}".format(model["opt"]["loss"]))
+    if "weight" in locals():
+        log.log("Weights :\t {}".format(dataset["weights"]["values"]))
     log.log("---")
 
     for epoch in range(resume, num_epochs):
