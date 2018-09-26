@@ -124,7 +124,13 @@ class RoadHandler(osmium.SimpleHandler):
 
         if "lanes" in w.tags:
             try:
-                lanes = int(w.tags["lanes"])
+                # Roads have at least one lane; guard against data issues.
+                lanes = max(int(w.tags["lanes"]), 1)
+
+                # Todo: take into account related lane tags
+                # https://wiki.openstreetmap.org/wiki/Tag:busway%3Dlane
+                # https://wiki.openstreetmap.org/wiki/Tag:cycleway%3Dlane
+                # https://wiki.openstreetmap.org/wiki/Key:parking:lane
             except:
                 print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
@@ -134,7 +140,11 @@ class RoadHandler(osmium.SimpleHandler):
 
         if "width" in w.tags:
             try:
-                road_width = float(w.tags["width"])
+                # At least one meter wide, for road classes specified above
+                road_width = max(float(w.tags["width"]), 1)
+
+                # Todo: handle optional units such as "2 m"
+                # https://wiki.openstreetmap.org/wiki/Key:width
             except:
                 print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
