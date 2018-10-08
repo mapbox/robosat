@@ -54,7 +54,13 @@ class Metrics:
         Returns:
           The foreground Intersection over Union score for all observations seen so far.
         """
-        return self.tp / (self.tp + self.fn + self.fp)
+
+        try:
+            iou = self.tp / (self.tp + self.fn + self.fp)
+        except ZeroDivisionError:
+            iou = float("Inf")
+
+        return iou
 
     def get_mcc(self):
         """Retrieves the Matthew's Coefficient Correlation score.
@@ -62,9 +68,15 @@ class Metrics:
         Returns:
           The Matthew's Coefficient Correlation score for all observations seen so far.
         """
-        return (self.tp * self.tn - self.fp * self.fn) / math.sqrt(
-            (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
-        )
+
+        try:
+            mcc = (self.tp * self.tn - self.fp * self.fn) / math.sqrt(
+                (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
+            )
+        except ZeroDivisionError:
+            mcc = float("Inf")
+
+        return mcc
 
 
 # Todo:
