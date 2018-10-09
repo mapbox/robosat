@@ -48,7 +48,7 @@ def add_parser(subparser):
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
     parser.add_argument("--resume", type=bool, default=False, help="resume training or fine-tuning (if checkpoint)")
-    parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
+    parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
 
     parser.set_defaults(func=main)
 

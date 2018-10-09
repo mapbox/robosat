@@ -31,7 +31,7 @@ def add_parser(subparser):
     parser.add_argument("--checkpoint", type=str, required=True, help="model checkpoint to load")
     parser.add_argument("--overlap", type=int, default=32, help="tile pixel overlap to predict on")
     parser.add_argument("--tile_size", type=int, required=True, help="tile size for slippy map tiles")
-    parser.add_argument("--workers", type=int, default=1, help="number of workers pre-processing images")
+    parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
     parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
