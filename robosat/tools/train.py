@@ -75,10 +75,10 @@ def main(args):
     if model["common"]["cuda"]:
         torch.backends.cudnn.benchmark = True
 
-    try:
-        weight = torch.Tensor(dataset["weights"]["values"])
-    except KeyError:
-        if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
+    if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
+        try:
+            weight = torch.Tensor(dataset["weights"]["values"])
+        except KeyError:
             sys.exit("Error: The loss function used, need dataset weights values")
 
     optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
