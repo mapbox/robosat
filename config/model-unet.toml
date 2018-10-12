@@ -32,3 +32,6 @@
 
   # Loss function name (e.g 'Lovasz', 'mIoU' or 'CrossEntropy')
   loss = 'Lovasz'
+
+  # Upscale input value factor to enhance resolution (classical values: 1, 2 or 4)
+  upscale_factor = 1

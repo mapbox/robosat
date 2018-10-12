@@ -248,6 +248,7 @@ def validate(loader, num_classes, device, net, criterion):
 
 def get_dataset_loaders(model, dataset, workers):
     target_size = (model["common"]["image_size"],) * 2
+    target_size = tuple([size * model["opt"]["upscale_factor"] for size in target_size])
     batch_size = model["common"]["batch_size"]
     path = dataset["common"]["dataset"]
 
@@ -257,7 +258,6 @@ def get_dataset_loaders(model, dataset, workers):
         [
             JointTransform(ConvertImageMode("RGB"), ConvertImageMode("P")),
             JointTransform(Resize(target_size, Image.BILINEAR), Resize(target_size, Image.NEAREST)),
-            JointTransform(CenterCrop(target_size), CenterCrop(target_size)),
             JointRandomHorizontalFlip(0.5),
             JointRandomRotation(0.5, 90),
             JointRandomRotation(0.5, 90),
