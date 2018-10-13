@@ -8,17 +8,21 @@ import requests
 from PIL import Image
 from tqdm import tqdm
 
-from robosat.tiles import tiles_from_csv, fetch_image
+from robosat.tiles import tiles_from_csv, fetch_image, tile_to_bbox
 
 
 def add_parser(subparser):
     parser = subparser.add_parser(
-        "download", help="downloads images from Mapbox Maps API", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        "download", help="downloads images from a remote server", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("url", type=str, help="endpoint with {z}/{x}/{y} variables to fetch image tiles from")
+    parser.add_argument(
+        "url", type=str, help="endpoint with {z}/{x}/{y} or {xmin},{ymin},{xmax},{ymax} variables to fetch image tiles"
+    )
     parser.add_argument("--ext", type=str, default="webp", help="file format to save images in")
     parser.add_argument("--rate", type=int, default=10, help="rate limit in max. requests per second")
+    parser.add_argument("--type", type=str, default="XYZ", help="service type to use (e.g: XYZ, WMS or TMS)")
+    parser.add_argument("--timeout", type=int, default=10, help="server request timeout (in seconds)")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
     parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
 
@@ -48,9 +52,16 @@ def main(args):
                 if os.path.isfile(path):
                     return tile, True
 
-                url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
+                if args.type == "XYZ":
+                    url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
+                elif args.type == "TMS":
+                    tile.y = (2 ** tile.z) - tile.y - 1
+                    url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
+                elif args.type == "WMS":
+                    xmin, ymin, xmax, ymax = tile_to_bbox(tile)
+                    url = args.url.format(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
 
-                res = fetch_image(session, url)
+                res = fetch_image(session, url, args.timeout)
 
                 if not res:
                     return tile, False

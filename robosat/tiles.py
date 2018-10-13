@@ -13,6 +13,7 @@ import io
 import os
 
 from PIL import Image
+from pyproj import Proj, transform
 import mercantile
 
 
@@ -40,6 +41,22 @@ def pixel_to_location(tile, dx, dy):
     lat = lerp(south, north, dy)
 
     return lon, lat
+
+
+def tile_to_bbox(tile):
+    """Convert a tile to bbox coordinates
+
+    Args:
+      tile: the mercantile tile
+
+    Returns:
+       Tile's bbox coordinates (expressed in EPSG:3857)
+    """
+
+    west, south, east, north = mercantile.bounds(tile)
+    x, y = transform(Proj("+init=EPSG:4326"), Proj("+init=EPSG:3857"), [west, east], [north, south])
+
+    return [min(x), min(y), max(x), max(y)]
 
 
 def fetch_image(session, url, timeout=10):
