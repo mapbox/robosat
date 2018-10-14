@@ -13,7 +13,8 @@ import io
 import os
 
 from PIL import Image
-from pyproj import Proj, transform
+from rasterio.warp import transform
+from rasterio.crs import CRS
 import mercantile
 
 
@@ -54,7 +55,7 @@ def tile_to_bbox(tile):
     """
 
     west, south, east, north = mercantile.bounds(tile)
-    x, y = transform(Proj("+init=EPSG:4326"), Proj("+init=EPSG:3857"), [west, east], [north, south])
+    x, y = transform(CRS.from_epsg(4326), CRS.from_epsg(3857), [west, east], [north, south])
 
     return [min(x), min(y), max(x), max(y)]
 
