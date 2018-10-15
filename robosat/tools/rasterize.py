@@ -14,6 +14,7 @@ from rasterio.transform import from_bounds
 from rasterio.features import rasterize
 from rasterio.warp import transform
 from supermercado import burntiles
+from shapely.geometry import shape, mapping
 
 from robosat.config import load_config
 from robosat.colors import make_palette
@@ -36,46 +37,34 @@ def add_parser(subparser):
 
 
 def feature_to_mercator(feature):
-    """Normalize feature and converts coords to 3857.
+    """Convert polygon feature coords to 3857.
 
     Args:
       feature: geojson feature to convert to mercator geometry.
     """
     # Ref: https://gist.github.com/dnomadb/5cbc116aacc352c7126e779c29ab7abe
 
-    src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(3857)
-
-    geometry = feature["geometry"]
-    if geometry["type"] == "Polygon":
-        xys = (zip(*part) for part in geometry["coordinates"])
-        xys = (list(zip(*transform(src_crs, dst_crs, *xy))) for xy in xys)
+    if feature["geometry"]["type"] == "Polygon":
+        xys = (zip(*ring) for ring in feature["geometry"]["coordinates"])
+        xys = (list(zip(*transform(CRS.from_epsg(4326), CRS.from_epsg(3857), *xy))) for xy in xys)
 
         yield {"coordinates": list(xys), "type": "Polygon"}
 
-    elif geometry["type"] == "MultiPolygon":
-        for component in geometry["coordinates"]:
-            xys = (zip(*part) for part in component)
-            xys = (list(zip(*transform(src_crs, dst_crs, *xy))) for xy in xys)
 
-            yield {"coordinates": list(xys), "type": "Polygon"}
-
-
-def burn(tile, features, size):
+def burn(tile, features, size, burn_value=1):
     """Burn tile with features.
 
     Args:
       tile: the mercantile tile to burn.
       features: the geojson features to burn.
       size: the size of burned image.
+      burn_value: the value you want in the output raster where a shape exists
 
     Returns:
       image: rasterized file of size with features burned.
     """
 
-    # the value you want in the output raster where a shape exists
-    burnval = 1
-    shapes = ((geometry, burnval) for feature in features for geometry in feature_to_mercator(feature))
+    shapes = ((geometry, burn_value) for feature in features for geometry in feature_to_mercator(feature))
 
     bounds = mercantile.xy_bounds(tile)
     transform = from_bounds(*bounds, size, size)
@@ -107,15 +96,18 @@ def main(args):
     feature_map = collections.defaultdict(list)
     for i, feature in enumerate(tqdm(fc["features"], ascii=True, unit="feature")):
 
-        if feature["geometry"]["type"] != "Polygon":
-            continue
+        if feature["geometry"]["type"] == "Polygon":
+            feature["geometry"]["coordinates"] = [feature["geometry"]["coordinates"]]
+            feature["geometry"]["type"] = "MultiPolygon"
 
-        try:
-            for tile in burntiles.burn([feature], zoom=args.zoom):
-                feature_map[mercantile.Tile(*tile)].append(feature)
-        except ValueError as e:
-            print("Warning: invalid feature {}, skipping".format(i), file=sys.stderr)
-            continue
+        for polygon in shape(feature["geometry"]):
+            simple_feature = {"type": "feature", "geometry": mapping(polygon)}
+            try:
+                for tile in burntiles.burn([simple_feature], zoom=args.zoom):
+                    feature_map[mercantile.Tile(*tile)].append(simple_feature)
+            except ValueError as e:
+                print("Warning: invalid feature {}, skipping".format(i), file=sys.stderr)
+                continue
 
     # Burn features to tiles and write to a slippy map directory.
     for tile in tqdm(list(tiles_from_csv(args.tiles)), ascii=True, unit="tile"):
