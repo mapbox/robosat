@@ -120,6 +120,7 @@ def main(args):
     log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
     log.log("Batch Size:\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t {}".format(model["common"]["image_size"]))
+    log.log("Image Upscale:\t {}".format(model["opt"]["image_upscale"]))
     log.log("Learning Rate:\t {}".format(model["opt"]["lr"]))
     log.log("Weight Decay:\t {}".format(model["opt"]["decay"]))
     log.log("Loss function:\t {}".format(model["opt"]["loss"]))
@@ -248,7 +249,7 @@ def validate(loader, num_classes, device, net, criterion):
 
 def get_dataset_loaders(model, dataset, workers):
     target_size = (model["common"]["image_size"],) * 2
-    target_size = tuple([size * model["opt"]["upscale_factor"] for size in target_size])
+    target_size = tuple([size * model["opt"]["image_upscale"] for size in target_size])
     batch_size = model["common"]["batch_size"]
     path = dataset["common"]["dataset"]
 
