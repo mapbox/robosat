@@ -50,7 +50,7 @@ def main(args):
                 path = os.path.join(args.out, z, x, "{}.{}".format(y, args.ext))
 
                 if os.path.isfile(path):
-                    return tile, True
+                    return tile, None, True
 
                 if args.type == "XYZ":
                     url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
@@ -64,13 +64,13 @@ def main(args):
                 res = fetch_image(session, url, args.timeout)
 
                 if not res:
-                    return tile, False
+                    return tile, url, False
 
                 try:
                     image = Image.open(res)
                     image.save(path, optimize=True)
                 except OSError:
-                    return tile, False
+                    return tile, url, False
 
                 tock = time.monotonic()
 
@@ -82,8 +82,8 @@ def main(args):
 
                 progress.update()
 
-                return tile, True
+                return tile, url, True
 
-            for tile, ok in executor.map(worker, tiles):
+            for tile, url, ok in executor.map(worker, tiles):
                 if not ok:
-                    print("Warning: {} failed, skipping".format(tile), file=sys.stderr)
+                    print("Warning:\n {} failed, skipping.\n {}\n".format(tile, url), file=sys.stderr)
