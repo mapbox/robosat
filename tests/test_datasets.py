@@ -12,17 +12,16 @@ class TestSlippyMapTiles(unittest.TestCase):
     images = "tests/fixtures/images/"
 
     def test_len(self):
-        dataset = SlippyMapTiles(TestSlippyMapTiles.images)
+        dataset = SlippyMapTiles(TestSlippyMapTiles.images, "image")
         self.assertEqual(len(dataset), 3)
 
     def test_getitem(self):
-        dataset = SlippyMapTiles(TestSlippyMapTiles.images)
+        dataset = SlippyMapTiles(TestSlippyMapTiles.images, "image")
         image, tile = dataset[0]
 
         assert tile == mercantile.Tile(69105, 105093, 18)
-        # Inspired by: https://github.com/python-pillow/Pillow/blob/master/Tests/test_image.py#L37-L38
-        self.assertEqual(repr(image)[:45], "<PIL.JpegImagePlugin.JpegImageFile image mode")
-        self.assertEqual(image.size, (512, 512))
+        self.assertEqual(image.size, 512 * 512 * 3)
+        self.assertEqual(image.shape, (512, 512, 3))
 
     def test_getitem_with_transform(self):
         # TODO

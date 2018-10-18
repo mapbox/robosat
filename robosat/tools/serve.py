@@ -12,6 +12,7 @@ from torchvision.transforms import Compose, Normalize
 
 import mercantile
 import requests
+import cv2
 from PIL import Image
 from flask import Flask, send_file, render_template, abort
 
@@ -19,7 +20,7 @@ from robosat.tiles import fetch_image
 from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import make_palette
-from robosat.transforms import ConvertImageMode, ImageToTensor
+from robosat.transforms import ImageToTensor
 
 """
 Simple tile server running a segmentation model on the fly.
@@ -62,7 +63,7 @@ def tile(z, x, y):
     if not res:
         abort(500)
 
-    image = Image.open(res)
+    image = cv2.cvtColor(cv2.imread(res), cv2.COLOR_BGR2RGB)
 
     mask = predictor.segment(image)
 
@@ -152,7 +153,7 @@ class Predictor:
         with torch.no_grad():
             mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
-            transform = Compose([ConvertImageMode(mode="RGB"), ImageToTensor(), Normalize(mean=mean, std=std)])
+            transform = Compose([ImageToTensor(), Normalize(mean=mean, std=std)])
             image = transform(image)
 
             batch = image.unsqueeze(0).to(self.device)

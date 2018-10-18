@@ -11,16 +11,15 @@ import torch.backends.cudnn
 from torch.nn import DataParallel
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from torchvision.transforms import Resize, CenterCrop, Normalize
+from torchvision.transforms import Normalize
 
 from tqdm import tqdm
 
 from robosat.transforms import (
     JointCompose,
     JointTransform,
-    JointRandomHorizontalFlip,
-    JointRandomRotation,
-    ConvertImageMode,
+    JointResize,
+    JointRandomFlipOrRotate,
     ImageToTensor,
     MaskToTensor,
 )
@@ -118,14 +117,15 @@ def main(args):
     log = Log(os.path.join(model["common"]["checkpoint"], "log"))
 
     log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
-    log.log("Batch Size:\t {}".format(model["common"]["batch_size"]))
-    log.log("Image Size:\t {}".format(model["common"]["image_size"]))
-    log.log("Image Upscale:\t {}".format(model["opt"]["image_upscale"]))
-    log.log("Learning Rate:\t {}".format(model["opt"]["lr"]))
-    log.log("Weight Decay:\t {}".format(model["opt"]["decay"]))
-    log.log("Loss function:\t {}".format(model["opt"]["loss"]))
+    log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
+    log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
+    log.log("Image Resize factor:\t {}".format(model["opt"]["image_resize_factor"]))
+    log.log("Flip or Rotate prob:\t {}".format(model["opt"]["flip_or_rotate_prob"]))
+    log.log("Learning Rate:\t\t {}".format(model["opt"]["lr"]))
+    log.log("Weight Decay:\t\t {}".format(model["opt"]["decay"]))
+    log.log("Loss function:\t\t {}".format(model["opt"]["loss"]))
     if "weight" in locals():
-        log.log("Weights :\t {}".format(dataset["weights"]["values"]))
+        log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
     log.log("---")
 
     for epoch in range(resume, num_epochs):
@@ -248,32 +248,28 @@ def validate(loader, num_classes, device, net, criterion):
 
 
 def get_dataset_loaders(model, dataset, workers):
-    target_size = (model["common"]["image_size"],) * 2
-    target_size = tuple([size * model["opt"]["image_upscale"] for size in target_size])
-    batch_size = model["common"]["batch_size"]
-    path = dataset["common"]["dataset"]
 
+    # Values computed on ImageNet DataSet
     mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
     transform = JointCompose(
         [
-            JointTransform(ConvertImageMode("RGB"), ConvertImageMode("P")),
-            JointTransform(Resize(target_size, Image.BILINEAR), Resize(target_size, Image.NEAREST)),
-            JointRandomHorizontalFlip(0.5),
-            JointRandomRotation(0.5, 90),
-            JointRandomRotation(0.5, 90),
-            JointRandomRotation(0.5, 90),
+            JointResize(model["opt"]["image_resize_factor"]),
+            JointRandomFlipOrRotate(model["opt"]["flip_or_rotate_prob"]),
             JointTransform(ImageToTensor(), MaskToTensor()),
             JointTransform(Normalize(mean=mean, std=std), None),
         ]
     )
 
+    batch_size = model["common"]["batch_size"]
+    path = dataset["common"]["dataset"]
+
     train_dataset = SlippyMapTilesConcatenation(
-        [os.path.join(path, "training", "images")], os.path.join(path, "training", "labels"), transform
+        os.path.join(path, "training", "images"), os.path.join(path, "training", "labels"), transform
     )
 
     val_dataset = SlippyMapTilesConcatenation(
-        [os.path.join(path, "validation", "images")], os.path.join(path, "validation", "labels"), transform
+        os.path.join(path, "validation", "images"), os.path.join(path, "validation", "labels"), transform
     )
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=workers)

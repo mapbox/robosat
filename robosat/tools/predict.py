@@ -17,7 +17,7 @@ from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import continuous_palette_for_color
-from robosat.transforms import ConvertImageMode, ImageToTensor
+from robosat.transforms import ImageToTensor
 
 
 def add_parser(subparser):
@@ -70,7 +70,7 @@ def main(args):
 
     mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
-    transform = Compose([ConvertImageMode(mode="RGB"), ImageToTensor(), Normalize(mean=mean, std=std)])
+    transform = Compose([ImageToTensor(), Normalize(mean=mean, std=std)])
 
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
