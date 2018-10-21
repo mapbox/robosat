@@ -78,6 +78,11 @@ def main(args):
     # don't track tensors with autograd during prediction
     with torch.no_grad():
         for images, tiles in tqdm(loader, desc="Eval", unit="batch", ascii=True):
+            tiles_zxy = [list(map(int, tile)) for tile in tiles]
+            tiles = [tile for (tile, tile_zxy) in zip(tiles, tiles_zxy) if not os.path.exists(os.path.join(args.probs, str(tile_zxy[2]), str(tile_zxy[0]), str(tile_zxy[1])+".png"))]
+
+            if len(tiles) == 0:
+                continue
             images = images.to(device)
             outputs = net(images)
 
