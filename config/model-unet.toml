@@ -33,8 +33,5 @@
   # Loss function name (e.g 'Lovasz', 'mIoU' or 'CrossEntropy')
   loss = 'Lovasz'
 
-  # Resize factor to input image resolution
-  image_resize_factor = 1
-
   # Data augmentation, Flip or Rotate probabilty
-  flip_or_rotate_prob = 0.25
+  data_augmentation = 0.75

@@ -119,8 +119,7 @@ def main(args):
     log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
     log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
-    log.log("Image Resize factor:\t {}".format(model["opt"]["image_resize_factor"]))
-    log.log("Flip or Rotate prob:\t {}".format(model["opt"]["flip_or_rotate_prob"]))
+    log.log("Data Augmentation:\t {}".format(model["opt"]["data_augmentation"]))
     log.log("Learning Rate:\t\t {}".format(model["opt"]["lr"]))
     log.log("Weight Decay:\t\t {}".format(model["opt"]["decay"]))
     log.log("Loss function:\t\t {}".format(model["opt"]["loss"]))
@@ -254,8 +253,8 @@ def get_dataset_loaders(model, dataset, workers):
 
     transform = JointCompose(
         [
-            JointResize(model["opt"]["image_resize_factor"]),
-            JointRandomFlipOrRotate(model["opt"]["flip_or_rotate_prob"]),
+            JointResize(model["common"]["image_size"]),
+            JointRandomFlipOrRotate(model["opt"]["data_augmentation"]),
             JointTransform(ImageToTensor(), MaskToTensor()),
             JointTransform(Normalize(mean=mean, std=std), None),
         ]

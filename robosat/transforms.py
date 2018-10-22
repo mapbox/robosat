@@ -156,14 +156,13 @@ class JointResize:
     """Callable to resize image and its mask
     """
 
-    def __init__(self, f):
+    def __init__(self, size):
         """Creates an `JointResize` instance.
 
         Args:
-          f: the desired resize factor
+          size: the desired square side size
         """
-        assert not (f % 2) or not (int(1 / f) % 2) or f == 1, "Invalid resize factor value"
-        self.f = f
+        self.hw = (size, size)
 
     def __call__(self, image, mask):
         """Resize image and its mask
@@ -176,14 +175,14 @@ class JointResize:
           The (image, mask) tuple resized
         """
 
-        if self.f == 1:
-            return image, mask
-        elif self.f > 1:
-            image_interpolation = cv2.INTER_AREA
+        if self.hw == image.shape[0:2]:
+            pass
+        elif self.hw[0] < image.shape[0] and self.hw[1] < image.shape[1]:
+            image = cv2.resize(image, self.hw, interpolation=cv2.INTER_AREA)
         else:
-            image_interpolation = cv2.INTER_LINEAR
+            image = cv2.resize(image, self.hw, interpolation=cv2.INTER_LINEAR)
 
-        return (
-            cv2.resize(image, None, fx=self.f, fy=self.f, interpolation=image_interpolation),
-            cv2.resize(mask, None, fx=self.f, fy=self.f, interpolation=cv2.INTER_NEAREST),
-        )
+        if self.hw != mask.shape:
+            mask = cv2.resize(mask, self.hw, interpolation=cv2.INTER_NEAREST)
+
+        return image, mask
