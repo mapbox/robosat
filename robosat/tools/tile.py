@@ -43,7 +43,7 @@ def main(args):
         assert len(colors) == 2, "only binary models supported right now"
 
     bounds = tiler.bounds(args.raster)["bounds"]
-    tiles = ([[x, y] for x, y, z in mercantile.tiles(*bounds + [[args.zoom]])])
+    tiles = [[x, y] for x, y, z in mercantile.tiles(*bounds + [[args.zoom]])]
 
     if args.no_edges:
         edges_x = (min(tiles, key=lambda xy: xy[0])[0]), (max(tiles, key=lambda xy: xy[0])[0])
@@ -71,9 +71,9 @@ def main(args):
 
             # GeoTiff could be 16 or 32bits
             if data.dtype == "uint16":
-                 data = np.uint8(data / 256)
+                data = np.uint8(data / 256)
             elif data.dtype == "uint32":
-                 data = np.uint8(data / (256 * 256))
+                data = np.uint8(data / (256 * 256))
 
             if C == 1:
                 Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ".png", optimize=True)
