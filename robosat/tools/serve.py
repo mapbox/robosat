@@ -63,7 +63,7 @@ def tile(z, x, y):
     if not res:
         abort(500)
 
-    image = cv2.cvtColor(cv2.imread(res), cv2.COLOR_BGR2RGB)
+    image = cv2.imdecode(np.asarray(bytearray(res.read()), dtype=np.uint8), cv2.COLOR_BGR2RGB)
 
     mask = predictor.segment(image)
 
