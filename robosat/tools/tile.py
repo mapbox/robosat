@@ -14,7 +14,7 @@ from robosat.colors import make_palette
 
 def add_parser(subparser):
     parser = subparser.add_parser(
-        "tile", help="tile a raster image", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        "tile", help="tile a raster image or label", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     parser.add_argument("raster", type=str, help="path to the raster to tile")

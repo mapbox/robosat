@@ -33,5 +33,5 @@
   # Loss function name (e.g 'Lovasz', 'mIoU' or 'CrossEntropy')
   loss = 'Lovasz'
 
-  # Data augmentation, Flip or Rotate probabilty
+  # Data augmentation, Flip or Rotate probability
   data_augmentation = 0.75
