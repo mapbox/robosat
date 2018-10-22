@@ -17,3 +17,4 @@ rtree
 pyproj
 toml
 pytest
+rio_tiler

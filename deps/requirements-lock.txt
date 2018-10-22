@@ -42,3 +42,4 @@ torchvision==0.2.1
 tqdm==4.23.4
 urllib3==1.22
 Werkzeug==0.14.1
+rio_tiler==1.0a7
