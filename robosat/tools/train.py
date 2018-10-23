@@ -26,7 +26,7 @@ from robosat.transforms import (
 )
 from robosat.datasets import SlippyMapTilesConcatenation
 from robosat.metrics import Metrics
-from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d, LovaszLoss2d
+from robosat.losses import CrossEntropyLoss2d, mIoULoss2d, FocalLoss2d, LovaszLoss2d, CombinedLoss, TopologyLoss
 from robosat.unet import UNet
 from robosat.utils import plot
 from robosat.config import load_config
@@ -108,6 +108,14 @@ def main(args):
     else:
         sys.exit("Error: Unknown [opt][loss] value !")
 
+    # use first three vgg feature maps and weight their contribution to loss
+    topology_weights = torch.tensor([0.2, 0.6, 0.2]).to(device)
+    topology_loss = TopologyLoss([0, 1, 2], topology_weights).to(device)
+
+    # combine the pixel-wise and the topology loss and weight them
+    loss_weights = torch.tensor([1.0, 10.0]).to(device)
+    criterion = CombinedLoss([criterion, topology_loss], loss_weights).to(device)
+
     train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
 
     num_epochs = model["opt"]["epochs"]
@@ -162,6 +170,8 @@ def main(args):
         states = {"epoch": epoch + 1, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict()}
 
         torch.save(states, os.path.join(model["common"]["checkpoint"], checkpoint))
+
+    topology_loss.close()
 
 
 def train(loader, num_classes, device, net, optimizer, criterion):
