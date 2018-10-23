@@ -80,8 +80,7 @@ def burn(tile, features, size):
     bounds = mercantile.xy_bounds(tile)
     transform = from_bounds(*bounds, size, size)
 
-    result = rasterize(shapes, out_shape=(size, size), transform=transform)
-    return Image.fromarray(result, mode="P")
+    return rasterize(shapes, out_shape=(size, size), transform=transform)
 
 
 def main(args):
@@ -122,12 +121,20 @@ def main(args):
         if tile in feature_map:
             out = burn(tile, feature_map[tile], args.size)
         else:
-            out = Image.fromarray(np.zeros(shape=(args.size, args.size)).astype(int), mode="P")
+            out = np.zeros(shape=(args.size, args.size), dtype=np.uint8)
+
+        out_dir = os.path.join(args.out, str(tile.z), str(tile.x))
+        os.makedirs(out_dir, exist_ok=True)
+
+        out_path = os.path.join(out_dir, "{}.png".format(tile.y))
+
+        if os.path.exists(out_path):
+            prev = np.array(Image.open(out_path))
+            out = np.maximum(out, prev)
+
+        out = Image.fromarray(out, mode="P")
 
         palette = make_palette(bg, fg)
         out.putpalette(palette)
 
-        out_path = os.path.join(args.out, str(tile.z), str(tile.x))
-        os.makedirs(out_path, exist_ok=True)
-
-        out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
+        out.save(out_path, optimize=True)
