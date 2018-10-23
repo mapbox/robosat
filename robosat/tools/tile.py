@@ -23,7 +23,8 @@ def add_parser(subparser):
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, needed for label tiling")
-    parser.add_argument("--no_edges", type=bool, help="don't generate edges tiles")
+    parser.add_argument("--no_edges", action="store_true", help="skip to generate edges tiles")
+    parser.add_argument("--label_thresold", type=int, default=1, help="label value thresold")
 
     parser.set_defaults(func=main)
 
@@ -49,7 +50,7 @@ def main(args):
         edges_x = (min(tiles, key=lambda xy: xy[0])[0]), (max(tiles, key=lambda xy: xy[0])[0])
         edges_y = (min(tiles, key=lambda xy: xy[1])[1]), (max(tiles, key=lambda xy: xy[1])[1])
         tiles = [[x, y] for x, y in tiles if x not in edges_x and y not in edges_y]
-        assert len(tiles), "Error: Nothing left to tile, once remove the edges"
+        assert len(tiles), "Error: Nothing left to tile, once the edges removed"
 
     for x, y in tqdm(tiles, desc="Tiling", unit="tile", ascii=True):
 
@@ -61,6 +62,9 @@ def main(args):
 
         if args.type == "label":
             assert C == 1, "Error: Label raster input should be 1 band"
+
+            data[data < args.label_thresold] = 0
+            data[data >= args.label_thresold] = 1
 
             img = Image.fromarray(np.squeeze(data, axis=0), mode="P")
             img.putpalette(make_palette(colors[0], colors[1]))
@@ -78,4 +82,8 @@ def main(args):
             if C == 1:
                 Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ".png", optimize=True)
             elif C == 3:
-                Image.fromarray(data, mode="RGB").save(path + ".webp", optimize=True)
+                Image.fromarray(np.swapaxes(data, 0, 2), mode="RGB").save(path + ".webp", optimize=True)
+
+        else:
+            print("Error: Unknown type, should be either 'image' or 'label'", file=sys.stderr)
+            sys.exit()
