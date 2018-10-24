@@ -62,9 +62,6 @@ def main(args):
     if model["common"]["cuda"] and not torch.cuda.is_available():
         sys.exit("Error: CUDA requested but not available")
 
-    # if args.batch_size < 2:
-    #     sys.exit('Error: PSPNet requires more than one image for BatchNorm in Pyramid Pooling')
-
     os.makedirs(model["common"]["checkpoint"], exist_ok=True)
 
     num_classes = len(dataset["common"]["classes"])
