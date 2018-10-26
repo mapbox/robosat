@@ -16,7 +16,7 @@ from PIL import Image
 from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.unet import UNet
 from robosat.config import load_config
-from robosat.colors import continuous_palette_for_color
+from robosat.colors import continuous_palette_for_color, make_palette
 from robosat.transforms import ImageToTensor
 
 
@@ -36,6 +36,7 @@ def add_parser(subparser):
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
 
     parser.set_defaults(func=main)
 
@@ -97,12 +98,15 @@ def main(args):
                 assert np.allclose(np.sum(prob, axis=0), 1.), "single channel requires probabilities to sum up to one"
                 foreground = prob[1:, :, :]
 
-                anchors = np.linspace(0, 1, 256)
-                quantized = np.digitize(foreground, anchors).astype(np.uint8)
+                if args.masks_output:
+                    image = np.around(foreground)
+                    palette = make_palette("denim", "orange")
 
-                palette = continuous_palette_for_color("pink", 256)
+                else:
+                    image = np.digitize(foreground, np.linspace(0, 1, 256))
+                    palette = continuous_palette_for_color("pink", 256)
 
-                out = Image.fromarray(quantized.squeeze(), mode="P")
+                out = Image.fromarray(image.squeeze().astype(np.uint8), mode="P")
                 out.putpalette(palette)
 
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
