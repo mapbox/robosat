@@ -91,18 +91,18 @@ def main(args):
                 # we predicted on buffered tiles; now get back probs for original image
                 prob = directory.unbuffer(prob)
 
-                # Quantize the floating point probabilities in [0,1] to [0,255] and store
-                # a single-channel `.png` file with a continuous color palette attached.
-
                 assert prob.shape[0] == 2, "single channel requires binary model"
                 assert np.allclose(np.sum(prob, axis=0), 1.), "single channel requires probabilities to sum up to one"
+
                 foreground = prob[1:, :, :]
 
                 if args.masks_output:
+                    # Quantize the floating point prob in [0,1] to {0,1} with a fixed palette attached
                     image = np.around(foreground)
                     palette = make_palette("denim", "orange")
 
                 else:
+                    # Quantize the floating point prob in [0,1] to [0,255] with a continuous color palette attached
                     image = np.digitize(foreground, np.linspace(0, 1, 256))
                     palette = continuous_palette_for_color("pink", 256)
 
