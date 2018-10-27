@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RoboSat LeafLet Client</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+	crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+	  integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+	  crossorigin=""></script>
+</head>
+<body>
+  <div id="mapid" style="width:100%; height:100vh;"></div>
+  <script>
+    var m = L.map("mapid", {zoomControl: false, boxZoom: false, scrollWheelZoom: false}).setView({{center}}, {{zoom}});
+    L.tileLayer("{{base_url}}/{z}/{x}/{y}{{ext}}").addTo(m);
+  </script>
+</body>
+</html>
