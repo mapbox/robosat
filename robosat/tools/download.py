@@ -9,6 +9,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from robosat.tiles import tiles_from_csv, fetch_image, tile_to_bbox
+from robosat.utils import leaflet
 
 
 def add_parser(subparser):
@@ -25,6 +26,7 @@ def add_parser(subparser):
     parser.add_argument("--timeout", type=int, default=10, help="server request timeout (in seconds)")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
     parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -87,3 +89,6 @@ def main(args):
             for tile, url, ok in executor.map(worker, tiles):
                 if not ok:
                     print("Warning:\n {} failed, skipping.\n {}\n".format(tile, url), file=sys.stderr)
+
+    if args.leaflet:
+        leaflet(args.out, args.leaflet, tiles, args.ext)

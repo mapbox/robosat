@@ -18,6 +18,7 @@ from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import continuous_palette_for_color, make_palette
 from robosat.transforms import ImageToTensor
+from robosat.utils import leaflet
 
 
 def add_parser(subparser):
@@ -37,6 +38,7 @@ def add_parser(subparser):
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -113,3 +115,6 @@ def main(args):
                 path = os.path.join(args.probs, str(z), str(x), str(y) + ".png")
 
                 out.save(path, optimize=True)
+
+        if args.leaflet:
+            leaflet(args.probs, args.leaflet, tiles, ".png")

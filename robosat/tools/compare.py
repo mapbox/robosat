@@ -20,6 +20,7 @@ def add_parser(subparser):
     parser.add_argument("masks", type=str, nargs="+", help="slippy map directories to read masks from")
     parser.add_argument("--minimum", type=float, default=0.0, help="minimum percentage of mask not background")
     parser.add_argument("--maximum", type=float, default=1.0, help="maximum percentage of mask not background")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -65,3 +66,6 @@ def main(args):
         os.makedirs(os.path.join(args.out, z, x), exist_ok=True)
         path = os.path.join(args.out, z, x, "{}.png".format(y))
         combined.save(path, optimize=True)
+
+    if args.leaflet:
+        leaflet(args.out, args.leaflet, images, ".png")

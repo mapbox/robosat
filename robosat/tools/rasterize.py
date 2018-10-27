@@ -19,6 +19,7 @@ from shapely.geometry import shape, mapping
 from robosat.config import load_config
 from robosat.colors import make_palette
 from robosat.tiles import tiles_from_csv
+from robosat.utils import leaflet
 
 
 def add_parser(subparser):
@@ -32,6 +33,7 @@ def add_parser(subparser):
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--size", type=int, default=512, help="size of rasterized image tiles in pixels")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -123,3 +125,6 @@ def main(args):
         os.makedirs(out_path, exist_ok=True)
 
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
+
+    if args.leaflet:
+        leaflet(args.out, args.leaflet, args.tiles, ".png")

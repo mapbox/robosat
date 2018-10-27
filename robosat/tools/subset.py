@@ -5,6 +5,7 @@ import shutil
 from tqdm import tqdm
 
 from robosat.tiles import tiles_from_slippy_map, tiles_from_csv
+from robosat.utils import leaflet
 
 
 def add_parser(subparser):
@@ -16,6 +17,7 @@ def add_parser(subparser):
     parser.add_argument("images", type=str, help="directory to read slippy map image tiles from for filtering")
     parser.add_argument("tiles", type=str, help="csv to filter images by")
     parser.add_argument("out", type=str, help="directory to save filtered images to")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -29,10 +31,13 @@ def main(args):
         if tile not in tiles:
             continue
 
-        # The extention also includes the period.
-        extention = os.path.splitext(src)[1]
+        # The extension also includes the period.
+        extension = os.path.splitext(src)[1]
 
         os.makedirs(os.path.join(args.out, str(tile.z), str(tile.x)), exist_ok=True)
-        dst = os.path.join(args.out, str(tile.z), str(tile.x), "{}{}".format(tile.y, extention))
+        dst = os.path.join(args.out, str(tile.z), str(tile.x), "{}{}".format(tile.y, extension))
 
         shutil.copyfile(src, dst)
+
+    if args.leaflet:
+        leaflet(args.out, args.leaflet, tiles, extension)

@@ -10,6 +10,7 @@ import mercantile
 from rio_tiler import main as tiler
 from robosat.config import load_config
 from robosat.colors import make_palette
+from robosat.utils import leaflet
 
 
 def add_parser(subparser):
@@ -25,6 +26,7 @@ def add_parser(subparser):
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, needed for label tiling")
     parser.add_argument("--no_edges", action="store_true", help="skip to generate edges tiles")
     parser.add_argument("--label_thresold", type=int, default=1, help="label value thresold")
+    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -66,9 +68,10 @@ def main(args):
             data[data < args.label_thresold] = 0
             data[data >= args.label_thresold] = 1
 
+            ext = ".png"
             img = Image.fromarray(np.squeeze(data, axis=0), mode="P")
             img.putpalette(make_palette(colors[0], colors[1]))
-            img.save(path + ".png", optimize=True)
+            img.save(path + ext, optimize=True)
 
         elif args.type == "image":
             assert C == 1 or C == 3, "Error: Image raster input should be either 1 or 3 bands"
@@ -80,10 +83,15 @@ def main(args):
                 data = np.uint8(data / (256 * 256))
 
             if C == 1:
-                Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ".png", optimize=True)
+                ext = ".png"
+                Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ext, optimize=True)
             elif C == 3:
-                Image.fromarray(np.swapaxes(data, 0, 2), mode="RGB").save(path + ".webp", optimize=True)
+                ext = ".webp"
+                Image.fromarray(np.swapaxes(data, 0, 2), mode="RGB").save(path + ext, optimize=True)
 
         else:
             print("Error: Unknown type, should be either 'image' or 'label'", file=sys.stderr)
             sys.exit()
+
+    if args.leaflet:
+        leaflet(args.out, args.leaflet, tiles, ext)

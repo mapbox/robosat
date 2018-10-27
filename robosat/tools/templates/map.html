@@ -45,7 +45,7 @@ mapboxgl.accessToken = '{{ token }}';
 
 var beforeMap = new mapboxgl.Map({
   container: 'before',
-  center: [-84.37, 33.75],
+  center: [45.5, 5.5],
   zoom: 18,
   minZoom: 5,
   maxZoom: 20,
@@ -55,7 +55,7 @@ var beforeMap = new mapboxgl.Map({
 
 var afterMap = new mapboxgl.Map({
   container: 'after',
-  center: [-84.37, 33.75],
+  center: [45.5, 5.5],
   zoom: 18,
   minZoom: 5,
   maxZoom: 20,
@@ -71,7 +71,7 @@ afterMap.on('load', function() {
     'type': 'raster',
     'source': {
       'type': 'raster',
-      'tiles': [ 'http://127.0.0.1:5000/{z}/{x}/{y}.png' ],
+      'tiles': [ 'http://127.0.0.1/rs/gl/validation/probs/{z}/{x}/{y}.png' ],
       'tileSize': {{ size }}
     }
   });
