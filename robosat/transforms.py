@@ -28,17 +28,17 @@ class MaskToTensor:
     """Callable to convert an OpenCV H,W image into a PyTorch tensor.
     """
 
-    def __call__(self, tensor):
-        """Converts the image into a tensor.
+    def __call__(self, mask):
+        """Converts the mask into a tensor.
 
         Args:
-          image: the image to convert into a PyTorch tensor.
+          mask: the mask to convert into a PyTorch tensor.
 
         Returns:
           The converted PyTorch tensor.
         """
 
-        return torch.from_numpy(tensor).long()
+        return torch.from_numpy(mask).long()
 
 
 class JointCompose:
