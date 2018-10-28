@@ -23,9 +23,9 @@ def add_parser(subparser):
     parser.add_argument("--size", type=int, default=512, help="size of tiles side in pixels")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, default="image", help="image or label tiling")
-    parser.add_argument("--dataset", type=str, help="path to dataset configuration file, needed for label tiling")
+    parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
     parser.add_argument("--no_edges", action="store_true", help="skip to generate edges tiles")
-    parser.add_argument("--label_thresold", type=int, default=1, help="label value thresold")
+    parser.add_argument("--label_threshold", type=int, default=1, help="label value threshold")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
@@ -37,8 +37,7 @@ def main(args):
         try:
             dataset = load_config(args.dataset)
         except:
-            print("Error: Unable to load DataSet config file", file=sys.stderr)
-            sys.exit()
+            sys.exit("Error: Unable to load DataSet config file")
 
         classes = dataset["common"]["classes"]
         colors = dataset["common"]["colors"]
@@ -46,32 +45,32 @@ def main(args):
         assert len(colors) == 2, "only binary models supported right now"
 
     bounds = tiler.bounds(args.raster)["bounds"]
-    tiles = [[x, y] for x, y, z in mercantile.tiles(*bounds + [[args.zoom]])]
+    tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(*bounds + [[args.zoom]])]
 
     if args.no_edges:
         edges_x = (min(tiles, key=lambda xy: xy[0])[0]), (max(tiles, key=lambda xy: xy[0])[0])
         edges_y = (min(tiles, key=lambda xy: xy[1])[1]), (max(tiles, key=lambda xy: xy[1])[1])
-        tiles = [[x, y] for x, y in tiles if x not in edges_x and y not in edges_y]
+        tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in tiles if x not in edges_x and y not in edges_y]
         assert len(tiles), "Error: Nothing left to tile, once the edges removed"
 
-    for x, y in tqdm(tiles, desc="Tiling", unit="tile", ascii=True):
+    for tile in tqdm(tiles, desc="Tiling", unit="tile", ascii=True):
 
-        os.makedirs(os.path.join(args.out, str(args.zoom), str(x)), exist_ok=True)
-        path = os.path.join(args.out, str(args.zoom), str(x), str(y))
-        data = tiler.tile(args.raster, x, y, args.zoom, tilesize=args.size)[0]
+        os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
+        path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
+        data = tiler.tile(args.raster, tile.x, tile.y, args.zoom, tilesize=args.size)[0]
 
         C, W, H = data.shape
 
         if args.type == "label":
             assert C == 1, "Error: Label raster input should be 1 band"
 
-            data[data < args.label_thresold] = 0
-            data[data >= args.label_thresold] = 1
+            data[data < args.label_threshold] = 0
+            data[data >= args.label_threshold] = 1
 
             ext = "png"
             img = Image.fromarray(np.squeeze(data, axis=0), mode="P")
             img.putpalette(make_palette(colors[0], colors[1]))
-            img.save(path + ext, optimize=True)
+            img.save("{}.{}".format(path, ext), optimize=True)
 
         elif args.type == "image":
             assert C == 1 or C == 3, "Error: Image raster input should be either 1 or 3 bands"
@@ -84,14 +83,13 @@ def main(args):
 
             if C == 1:
                 ext = "png"
-                Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ext, optimize=True)
+                Image.fromarray(np.squeeze(data, axis=0), mode="L").save("{}.{}".format(path, ext), optimize=True)
             elif C == 3:
                 ext = "webp"
-                Image.fromarray(np.swapaxes(data, 0, 2), mode="RGB").save(path + ext, optimize=True)
+                Image.fromarray(np.moveaxis(data, 0, 2), mode="RGB").save("{}.{}".format(path, ext), optimize=True)
 
         else:
-            print("Error: Unknown type, should be either 'image' or 'label'", file=sys.stderr)
-            sys.exit()
+            sys.exit("Error: Unknown type, should be either 'image' or 'label'")
 
     if args.leaflet:
         leaflet(args.out, args.leaflet, tiles, ext)
