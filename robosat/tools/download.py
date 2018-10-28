@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from robosat.tiles import tiles_from_csv, fetch_image, tile_to_bbox
 from robosat.utils import leaflet
+from robosat.log import Log
 
 
 def add_parser(subparser):
@@ -33,9 +34,14 @@ def add_parser(subparser):
 
 def main(args):
     tiles = list(tiles_from_csv(args.tiles))
+    already_dl = 0
 
     with requests.Session() as session:
         num_workers = args.rate
+
+        os.makedirs(os.path.join(args.out), exist_ok=True)
+        log = Log(os.path.join(args.out, "log"), out=sys.stderr)
+        log.log("Begin download from {}".format(args.url))
 
         # tqdm has problems with concurrent.futures.ThreadPoolExecutor; explicitly call `.update`
         # https://github.com/tqdm/tqdm/issues/97
@@ -87,8 +93,13 @@ def main(args):
                 return tile, url, True
 
             for tile, url, ok in executor.map(worker, tiles):
+                if not url and ok:
+                    already_dl += 1
                 if not ok:
-                    print("Warning:\n {} failed, skipping.\n {}\n".format(tile, url), file=sys.stderr)
+                    log.log("Warning:\n {} failed, skipping.\n {}\n".format(tile, url))
+
+    if already_dl:
+        log.log("Notice:\n {} tiles already downloads previously, so skipped now.".format(already_dl))
 
     if args.leaflet:
         leaflet(args.out, args.leaflet, tiles, args.ext)
