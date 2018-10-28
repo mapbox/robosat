@@ -68,7 +68,7 @@ def main(args):
             data[data < args.label_thresold] = 0
             data[data >= args.label_thresold] = 1
 
-            ext = ".png"
+            ext = "png"
             img = Image.fromarray(np.squeeze(data, axis=0), mode="P")
             img.putpalette(make_palette(colors[0], colors[1]))
             img.save(path + ext, optimize=True)
@@ -83,10 +83,10 @@ def main(args):
                 data = np.uint8(data / (256 * 256))
 
             if C == 1:
-                ext = ".png"
+                ext = "png"
                 Image.fromarray(np.squeeze(data, axis=0), mode="L").save(path + ext, optimize=True)
             elif C == 3:
-                ext = ".webp"
+                ext = "webp"
                 Image.fromarray(np.swapaxes(data, 0, 2), mode="RGB").save(path + ext, optimize=True)
 
         else:

@@ -117,4 +117,4 @@ def main(args):
                 out.save(path, optimize=True)
 
         if args.leaflet:
-            leaflet(args.probs, args.leaflet, tiles, ".png")
+            leaflet(args.probs, args.leaflet, tiles, "png")

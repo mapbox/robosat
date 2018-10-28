@@ -31,11 +31,10 @@ def main(args):
         if tile not in tiles:
             continue
 
-        # The extension also includes the period.
-        extension = os.path.splitext(src)[1]
+        extension = os.path.splitext(src)[1][1:]
 
         os.makedirs(os.path.join(args.out, str(tile.z), str(tile.x)), exist_ok=True)
-        dst = os.path.join(args.out, str(tile.z), str(tile.x), "{}{}".format(tile.y, extension))
+        dst = os.path.join(args.out, str(tile.z), str(tile.x), "{}.{}".format(tile.y, extension))
 
         shutil.copyfile(src, dst)
 

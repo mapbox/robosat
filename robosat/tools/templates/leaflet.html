@@ -15,7 +15,7 @@
   <div id="mapid" style="width:100%; height:100vh;"></div>
   <script>
     var m = L.map("mapid", {zoomControl: false, boxZoom: false, scrollWheelZoom: false}).setView({{center}}, {{zoom}});
-    L.tileLayer("{{base_url}}/{z}/{x}/{y}{{ext}}").addTo(m);
+    L.tileLayer("{{base_url}}/{z}/{x}/{y}.{{ext}}").addTo(m);
   </script>
 </body>
 </html>
