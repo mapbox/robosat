@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import argparse
 from tqdm import tqdm
 
@@ -9,8 +10,8 @@ from PIL import Image
 import mercantile
 import rasterio as rio
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform_bounds
 from rasterio.enums import Resampling
+from rasterio.warp import transform_bounds, calculate_default_transform
 from robosat.config import load_config
 from robosat.colors import make_palette
 from robosat.utils import leaflet
@@ -49,8 +50,7 @@ def main(args):
 
     try:
         raster = rio.open(args.raster)
-        warp_vrt = WarpedVRT(raster, dst_crs="EPSG:3857", resampling=Resampling.bilinear)
-        bounds = transform_bounds(*[raster.crs, "epsg:4326"] + list(raster.bounds))
+        bounds = transform_bounds(raster.crs, "EPSG:4326", *raster.bounds)
         tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(*bounds + (args.zoom,))]
     except:
         sys.exit("Error: Unable to load raster or deal with it's projection")
@@ -65,11 +65,22 @@ def main(args):
 
         os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
         path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
-        data = warp_vrt.read(
-            out_shape=(len(raster.indexes), args.size, args.size),
-            window=warp_vrt.window(*mercantile.xy_bounds(tile)),
-            boundless=True,
+
+        # Inspired by Rio-Tiler, cf: https://github.com/mapbox/rio-tiler/pull/45
+        transform, _, _ = calculate_default_transform(raster.crs, "EPSG:3857", raster.width, raster.height, *bounds)
+        w, s, e, n = tile_bounds = mercantile.xy_bounds(tile)
+
+        warp_vrt = WarpedVRT(
+            raster,
+            crs="EPSG:3857",
+            resampling=Resampling.bilinear,
+            add_alpha=False,
+            transform=rio.transform.from_bounds(*tile_bounds, args.size, args.size),
+            width=math.ceil((e - w) / transform.a),
+            height=math.ceil((s - n) / transform.e),
         )
+
+        data = warp_vrt.read(out_shape=(len(raster.indexes), args.size, args.size), window=warp_vrt.window(w, s, e, n))
         C, W, H = data.shape
 
         if args.type == "label":

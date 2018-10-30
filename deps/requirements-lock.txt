@@ -28,7 +28,7 @@ pyproj==1.9.5.1
 pytest==3.6.1
 python-dateutil==2.7.3
 pytz==2018.4
-rasterio==1.0b1
+rasterio==1.0.9
 requests==2.18.4
 Rtree==0.8.3
 scipy==1.1.0
