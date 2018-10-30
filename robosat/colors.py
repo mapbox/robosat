@@ -93,3 +93,16 @@ def continuous_palette_for_color(color, bins=256):
     assert len(palette) // 3 == bins
 
     return palette
+
+
+def complementary_palette(palette):
+
+    comp_palette = []
+    colors = [palette[i:i+3] for i in range(0, len(palette), 3)]
+
+    for color in colors:
+        r, g, b = [v for v in color]
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        comp_palette.extend(map(int, colorsys.hsv_to_rgb((h + 0.5) % 1, s, v)))
+
+    return comp_palette
