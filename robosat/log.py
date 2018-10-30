@@ -10,9 +10,9 @@ class Log:
     """Create a log instance on a log file
     """
 
-    def __init__(self, path, out=sys.stdout):
+    def __init__(self, path, out=sys.stdout, mode="a"):
         self.out = out
-        self.fp = open(path, "a")
+        self.fp = open(path, mode)
         assert self.fp, "Unable to open log file"
 
     """Log a new message to the opened log file, and optionnaly on stdout or stderr too
