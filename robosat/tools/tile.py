@@ -7,7 +7,10 @@ import numpy as np
 from PIL import Image
 
 import mercantile
-from rio_tiler import main as tiler
+import rasterio as rio
+from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform_bounds
+from rasterio.enums import Resampling
 from robosat.config import load_config
 from robosat.colors import make_palette
 from robosat.utils import leaflet
@@ -24,7 +27,7 @@ def add_parser(subparser):
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
-    parser.add_argument("--no_edges", action="store_true", help="skip to generate edges tiles")
+    parser.add_argument("--no_edges", action="store_true", help="don't generate edges tiles (to avoid black margins)")
     parser.add_argument("--label_threshold", type=int, default=1, help="label value threshold")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
@@ -44,8 +47,13 @@ def main(args):
         assert len(classes) == len(colors), "classes and colors coincide"
         assert len(colors) == 2, "only binary models supported right now"
 
-    bounds = tiler.bounds(args.raster)["bounds"]
-    tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(*bounds + [[args.zoom]])]
+    try:
+        raster = rio.open(args.raster)
+        warp_vrt = WarpedVRT(raster, dst_crs="EPSG:3857", resampling=Resampling.bilinear)
+        bounds = transform_bounds(*[raster.crs, "epsg:4326"] + list(raster.bounds))
+        tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(*bounds + (args.zoom,))]
+    except:
+        sys.exit("Error: Unable to load raster or deal with it's projection")
 
     if args.no_edges:
         edges_x = (min(tiles, key=lambda xy: xy[0])[0]), (max(tiles, key=lambda xy: xy[0])[0])
@@ -57,8 +65,11 @@ def main(args):
 
         os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
         path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
-        data = tiler.tile(args.raster, tile.x, tile.y, args.zoom, tilesize=args.size)[0]
-
+        data = warp_vrt.read(
+            out_shape=(len(raster.indexes), args.size, args.size),
+            window=warp_vrt.window(*mercantile.xy_bounds(tile)),
+            boundless=True,
+        )
         C, W, H = data.shape
 
         if args.type == "label":
