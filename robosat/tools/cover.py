@@ -7,6 +7,8 @@ from supermercado import burntiles
 from mercantile import tiles
 from tqdm import tqdm
 
+from robosat.datasets import tiles_from_slippy_map
+
 
 def add_parser(subparser):
     parser = subparser.add_parser(
@@ -15,15 +17,19 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
+    parser.add_argument("--zoom", type=int, help="zoom level of tiles")
     parser.add_argument("--features", type=str, help="path to GeoJSON features")
     parser.add_argument("--bbox", type=str, help="bbox expressed in lat/lon (i.e EPSG:4326)")
+    parser.add_argument("--path", type=str, help="Slippy Map directory input path")
     parser.add_argument("out", type=str, help="path to csv file to store tiles in")
 
     parser.set_defaults(func=main)
 
 
 def main(args):
+
+    if not args.zoom and (args.features or args.bbox):
+        sys.exit("Zoom parameter is mandatory")
 
     cover = []
 
@@ -41,8 +47,11 @@ def main(args):
         west, south, east, north = map(float, args.bbox.split(","))
         cover = tiles(west, south, east, north, args.zoom)
 
+    elif args.path:
+        cover = [tile for tile, _ in tiles_from_slippy_map(args.path)]
+
     else:
-        sys.exit("You have to provide either a GeoJson features file, or a lat/lon bbox")
+        sys.exit("You have to provide either a GeoJson features file, or a lat/lon bbox, or an input directory path")
 
     with open(args.out, "w") as fp:
         writer = csv.writer(fp)
