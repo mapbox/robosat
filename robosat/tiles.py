@@ -203,43 +203,28 @@ def buffer_tile_image(tile, tiles, overlap, tile_size, nodata=0):
     center = Image.open(path).convert("RGB")
     composite.paste(center, box=(overlap, overlap))
 
-    top_left = adjacent_tile(tile, -1, -1, tiles)
-    top_right = adjacent_tile(tile, +1, -1, tiles)
-    bottom_left = adjacent_tile(tile, -1, +1, tiles)
-    bottom_right = adjacent_tile(tile, +1, +1, tiles)
-
-    top = adjacent_tile(tile, 0, -1, tiles)
-    left = adjacent_tile(tile, -1, 0, tiles)
-    bottom = adjacent_tile(tile, 0, +1, tiles)
-    right = adjacent_tile(tile, +1, 0, tiles)
+    # 3x3 matrix (upper, center, bottom) x (left, center, right)
+    ul = adjacent_tile(tile, -1, -1, tiles)
+    ur = adjacent_tile(tile, +1, -1, tiles)
+    bl = adjacent_tile(tile, -1, +1, tiles)
+    br = adjacent_tile(tile, +1, +1, tiles)
+    uc = adjacent_tile(tile, +0, -1, tiles)
+    cl = adjacent_tile(tile, -1, +0, tiles)
+    bc = adjacent_tile(tile, +0, +1, tiles)
+    cr = adjacent_tile(tile, +1, +0, tiles)
 
     def maybe_stitch(maybe_tile, composite_box, tile_box):
         if maybe_tile:
             stitch_image(composite, composite_box, maybe_tile, tile_box)
 
-    maybe_stitch(top_left, (0, 0, overlap, overlap), (tile_size - overlap, tile_size - overlap, tile_size, tile_size))
-    maybe_stitch(
-        top_right, (tile_size + overlap, 0, composite_size, overlap), (0, tile_size - overlap, overlap, tile_size)
-    )
-    maybe_stitch(
-        bottom_left,
-        (0, composite_size - overlap, overlap, composite_size),
-        (tile_size - overlap, 0, tile_size, overlap),
-    )
-    maybe_stitch(
-        bottom_right,
-        (composite_size - overlap, composite_size - overlap, composite_size, composite_size),
-        (0, 0, overlap, overlap),
-    )
-    maybe_stitch(top, (overlap, 0, composite_size - overlap, overlap), (0, tile_size - overlap, tile_size, tile_size))
-    maybe_stitch(left, (0, overlap, overlap, composite_size - overlap), (tile_size - overlap, 0, tile_size, tile_size))
-    maybe_stitch(
-        bottom,
-        (overlap, composite_size - overlap, composite_size - overlap, composite_size),
-        (0, 0, tile_size, overlap),
-    )
-    maybe_stitch(
-        right, (composite_size - overlap, overlap, composite_size, composite_size - overlap), (0, 0, overlap, tile_size)
-    )
+    o = overlap
+    maybe_stitch(ul, (0, 0, o, o), (tile_size - o, tile_size - o, tile_size, tile_size))
+    maybe_stitch(ur, (tile_size + o, 0, composite_size, o), (0, tile_size - o, o, tile_size))
+    maybe_stitch(bl, (0, composite_size - o, o, composite_size), (tile_size - o, 0, tile_size, o))
+    maybe_stitch(br, (composite_size - o, composite_size - o, composite_size, composite_size), (0, 0, o, o))
+    maybe_stitch(uc, (o, 0, composite_size - o, o), (0, tile_size - o, tile_size, tile_size))
+    maybe_stitch(cl, (0, o, o, composite_size - o), (tile_size - o, 0, tile_size, tile_size))
+    maybe_stitch(bc, (o, composite_size - o, composite_size - o, composite_size), (0, 0, tile_size, o))
+    maybe_stitch(cr, (composite_size - o, o, composite_size, composite_size - o), (0, 0, o, tile_size))
 
     return composite
