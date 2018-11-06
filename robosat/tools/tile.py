@@ -8,10 +8,13 @@ import numpy as np
 from PIL import Image
 
 import mercantile
-import rasterio as rio
+
+from rasterio import open as rasterio_open
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
 from rasterio.warp import transform_bounds, calculate_default_transform
+from rasterio.transform import from_bounds
+
 from robosat.config import load_config
 from robosat.colors import make_palette
 from robosat.utils import leaflet
@@ -28,8 +31,7 @@ def add_parser(subparser):
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
-    parser.add_argument("--no_edges", action="store_true", help="don't generate edges tiles (to avoid black margins)")
-    parser.add_argument("--label_threshold", type=int, default=1, help="label value threshold")
+    parser.add_argument("--no_data", type=int, help="color considered as no data [0-255]. Skip related tile")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
@@ -49,45 +51,49 @@ def main(args):
         assert len(colors) == 2, "only binary models supported right now"
 
     try:
-        raster = rio.open(args.raster)
-        bounds = transform_bounds(raster.crs, "EPSG:4326", *raster.bounds)
-        tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(*bounds + (args.zoom,))]
+        os.environ["GDAL_CACHEMAX"] = "50%"  # rasterio Env don't (yet) handle % settings
+        raster = rasterio_open(args.raster)
+        w, s, e, n = bounds = transform_bounds(raster.crs, "EPSG:4326", *raster.bounds)
+        transform, _, _ = calculate_default_transform(raster.crs, "EPSG:3857", raster.width, raster.height, *bounds)
     except:
         sys.exit("Error: Unable to load raster or deal with it's projection")
 
-    if args.no_edges:
-        edges_x = (min(tiles, key=lambda xy: xy[0])[0]), (max(tiles, key=lambda xy: xy[0])[0])
-        edges_y = (min(tiles, key=lambda xy: xy[1])[1]), (max(tiles, key=lambda xy: xy[1])[1])
-        tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in tiles if x not in edges_x and y not in edges_y]
-        assert len(tiles), "Error: Nothing left to tile, once the edges removed"
+    tiles = [mercantile.Tile(x=x, y=y, z=z) for x, y, z in mercantile.tiles(w, s, e, n, args.zoom)]
+    tiles_nodata = []
 
     for tile in tqdm(tiles, desc="Tiling", unit="tile", ascii=True):
 
         os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
         path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
 
-        # Inspired by Rio-Tiler, cf: https://github.com/mapbox/rio-tiler/pull/45
-        transform, _, _ = calculate_default_transform(raster.crs, "EPSG:3857", raster.width, raster.height, *bounds)
         w, s, e, n = tile_bounds = mercantile.xy_bounds(tile)
 
+        # Inspired by Rio-Tiler, cf: https://github.com/mapbox/rio-tiler/pull/45
         warp_vrt = WarpedVRT(
             raster,
             crs="EPSG:3857",
             resampling=Resampling.bilinear,
             add_alpha=False,
-            transform=rio.transform.from_bounds(*tile_bounds, args.size, args.size),
+            transform=from_bounds(*tile_bounds, args.size, args.size),
             width=math.ceil((e - w) / transform.a),
             height=math.ceil((s - n) / transform.e),
         )
-
         data = warp_vrt.read(out_shape=(len(raster.indexes), args.size, args.size), window=warp_vrt.window(w, s, e, n))
+
+        # If no_data is set, remove all tiles with at least one whole border filled only with no_data (on all bands)
+        if type(args.no_data) is not None and (
+            np.all(data[:, 0, :] == args.no_data)
+            or np.all(data[:, -1, :] == args.no_data)
+            or np.all(data[:, :, 0] == args.no_data)
+            or np.all(data[:, :, -1] == args.no_data)
+        ):
+            tiles_nodata.append(tile)
+            continue
+
         C, W, H = data.shape
 
         if args.type == "label":
             assert C == 1, "Error: Label raster input should be 1 band"
-
-            data[data < args.label_threshold] = 0
-            data[data >= args.label_threshold] = 1
 
             ext = "png"
             img = Image.fromarray(np.squeeze(data, axis=0), mode="P")
@@ -114,4 +120,4 @@ def main(args):
             sys.exit("Error: Unknown type, should be either 'image' or 'label'")
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, tiles, ext)
+        leaflet(args.out, args.leaflet, [tile for tile in tiles if tile not in tiles_nodata], ext)
