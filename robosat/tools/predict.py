@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
 from tqdm import tqdm
-from PIL import Image
+from cv2 import imwrite, applyColorMap
 
 from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.tiles import tiles_from_slippy_map
@@ -36,7 +36,6 @@ def add_parser(subparser):
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
     parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
-    parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
@@ -45,29 +44,23 @@ def add_parser(subparser):
 
 
 def main(args):
-    model = load_config(args.model)
     dataset = load_config(args.dataset)
+    num_classes = len(dataset["common"]["classes"])
 
-    cuda = model["common"]["cuda"]
-
-    device = torch.device("cuda" if cuda else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        torch.backends.cudnn.benchmark = True
+    else:
+        device = torch.device("cpu")
 
     def map_location(storage, _):
-        return storage.cuda() if cuda else storage.cpu()
-
-    if cuda and not torch.cuda.is_available():
-        sys.exit("Error: CUDA requested but not available")
-
-    num_classes = len(dataset["common"]["classes"])
+        return storage.cuda() if torch.cuda.is_available() else storage.cpu()
 
     # https://github.com/pytorch/pytorch/issues/7178
     chkpt = torch.load(args.checkpoint, map_location=map_location)
 
     net = UNet(num_classes).to(device)
     net = nn.DataParallel(net)
-
-    if cuda:
-        torch.backends.cudnn.benchmark = True
 
     net.load_state_dict(chkpt["state_dict"])
     net.eval()
@@ -78,6 +71,11 @@ def main(args):
 
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
+
+    if args.masks_output:
+        colormap = make_palette("white", "pink", colormap=True)
+    else:
+        colormap = continuous_palette_for_color("pink", 256, colormap=True)
 
     # don't track tensors with autograd during prediction
     with torch.no_grad():
@@ -95,27 +93,17 @@ def main(args):
                 prob = directory.unbuffer(prob)
 
                 assert prob.shape[0] == 2, "single channel requires binary model"
-                assert np.allclose(np.sum(prob, axis=0), 1.), "single channel requires probabilities to sum up to one"
-
-                foreground = prob[1:, :, :]
+                assert np.allclose(np.sum(prob, axis=0), 1.0), "single channel requires probabilities to sum up to one"
 
                 if args.masks_output:
-                    # Quantize the floating point prob in [0,1] to {0,1} with a fixed palette attached
-                    image = np.around(foreground)
-                    palette = make_palette("denim", "orange")
-
+                    image = np.around(prob[1:, :, :]).astype(np.uint8).squeeze()
                 else:
-                    # Quantize the floating point prob in [0,1] to [0,255] with a continuous color palette attached
-                    image = np.digitize(foreground, np.linspace(0, 1, 256))
-                    palette = continuous_palette_for_color("pink", 256)
-
-                out = Image.fromarray(image.squeeze().astype(np.uint8), mode="P")
-                out.putpalette(palette)
+                    image = (prob[1:, :, :] * 255).astype(np.uint8).squeeze()
 
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
                 path = os.path.join(args.probs, str(z), str(x), str(y) + ".png")
 
-                out.save(path, optimize=True)
+                imwrite(path, applyColorMap(image, colormap))
 
     if args.leaflet:
         leaflet(args.probs, args.leaflet, [tile for tile, _ in tiles_from_slippy_map(args.tiles)], "png")
