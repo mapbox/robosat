@@ -79,19 +79,36 @@ class UNet(nn.Module):
        Also known as AlbuNet due to its inventor Alexander Buslaev.
     """
 
-    def __init__(self, num_classes, num_filters=32, pretrained=True):
+    def __init__(self, num_classes, num_filters=32, num_inputs=3, pretrained=True):
         """Creates an `UNet` instance for semantic segmentation.
 
         Args:
           num_classes: number of classes to predict.
+          num_filters:
+          num_inputs: number of input channels.
           pretrained: use ImageNet pre-trained backbone feature extractor
         """
 
         super().__init__()
 
-        # Todo: make input channels configurable, not hard-coded to three channels for RGB
+        resnet = resnet50(pretrained=pretrained)
+        if num_inputs != 3:
+            # new input layer
+            # https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py#L104-L105
+            new_layer = nn.Conv2d(num_inputs, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
-        self.resnet = resnet50(pretrained=pretrained)
+            # extend weights with zeros (assumes the first 3 channels are RGB)
+            sd = resnet.state_dict()
+            ow = sd['conv1.weight']
+            zw = torch.zeros(64, 1, 7, 7)
+            nw = torch.cat([ow] + [zw] * (num_inputs - 3), dim=1)
+            sd['conv1.weight'] = nw
+
+            # replace resnet input layer
+            resnet._modules['conv1'] = new_layer
+            resnet.load_state_dict(sd)
+
+        self.resnet = resnet
 
         # Access resnet directly in forward pass; do not store refs here due to
         # https://github.com/pytorch/pytorch/issues/8392
