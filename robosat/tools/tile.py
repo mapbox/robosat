@@ -51,7 +51,6 @@ def main(args):
         assert len(colors) == 2, "only binary models supported right now"
 
     try:
-        os.environ["GDAL_CACHEMAX"] = "50%"  # rasterio Env don't (yet) handle % settings
         raster = rasterio_open(args.raster)
         w, s, e, n = bounds = transform_bounds(raster.crs, "EPSG:4326", *raster.bounds)
         transform, _, _ = calculate_default_transform(raster.crs, "EPSG:3857", raster.width, raster.height, *bounds)
