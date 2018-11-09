@@ -63,9 +63,6 @@ def main(args):
 
     for tile in tqdm(tiles, desc="Tiling", unit="tile", ascii=True):
 
-        os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
-        path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
-
         w, s, e, n = tile_bounds = mercantile.xy_bounds(tile)
 
         # Inspired by Rio-Tiler, cf: https://github.com/mapbox/rio-tiler/pull/45
@@ -91,6 +88,9 @@ def main(args):
             continue
 
         C, W, H = data.shape
+
+        os.makedirs(os.path.join(args.out, str(args.zoom), str(tile.x)), exist_ok=True)
+        path = os.path.join(args.out, str(args.zoom), str(tile.x), str(tile.y))
 
         if args.type == "label":
             assert C == 1, "Error: Label raster input should be 1 band"
