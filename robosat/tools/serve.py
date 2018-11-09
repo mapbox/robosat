@@ -84,7 +84,6 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
 
     parser.add_argument("--url", type=str, help="endpoint with {z}/{x}/{y} variables to fetch image tiles from")
@@ -97,13 +96,7 @@ def add_parser(subparser):
 
 
 def main(args):
-    model = load_config(args.model)
     dataset = load_config(args.dataset)
-
-    cuda = model["common"]["cuda"]
-
-    if cuda and not torch.cuda.is_available():
-        sys.exit("Error: CUDA requested but not available")
 
     global size
     size = args.tile_size
@@ -121,7 +114,7 @@ def main(args):
     tiles = args.url
 
     global predictor
-    predictor = Predictor(args.checkpoint, model, dataset)
+    predictor = Predictor(args.checkpoint, dataset)
 
     app.run(host=args.host, port=args.port, threaded=False)
 
@@ -134,16 +127,12 @@ def send_png(image):
 
 
 class Predictor:
-    def __init__(self, checkpoint, model, dataset):
-        cuda = model["common"]["cuda"]
+    def __init__(self, checkpoint, dataset):
 
-        assert torch.cuda.is_available() or not cuda, "cuda is available when requested"
-
-        self.cuda = cuda
-        self.device = torch.device("cuda" if cuda else "cpu")
+        self.cuda = torch.cuda.is_available()
+        self.device = torch.device("cuda" if self.cuda else "cpu")
 
         self.checkpoint = checkpoint
-        self.model = model
         self.dataset = dataset
 
         self.net = self.net_from_chkpt_()

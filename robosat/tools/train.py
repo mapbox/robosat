@@ -56,13 +56,15 @@ def main(args):
     model = load_config(args.model)
     dataset = load_config(args.dataset)
 
-    device = torch.device("cuda" if model["common"]["cuda"] else "cpu")
+    log = Log(os.path.join(model["common"]["checkpoint"], "log"))
 
-    if model["common"]["cuda"] and not torch.cuda.is_available():
-        sys.exit("Error: CUDA requested but not available")
-
-    # if args.batch_size < 2:
-    #     sys.exit('Error: PSPNet requires more than one image for BatchNorm in Pyramid Pooling')
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        torch.backends.cudnn.benchmark = True
+        log.log("RoboSat - training on {} GPUs, with {} workers".format(torch.cuda.device_count(), args.workers))
+    else:
+        device = torch.device("cpu")
+        log.log("RoboSat - training on CPU, with {} workers", format(args.workers))
 
     os.makedirs(model["common"]["checkpoint"], exist_ok=True)
 
@@ -70,9 +72,6 @@ def main(args):
     net = UNet(num_classes)
     net = DataParallel(net)
     net = net.to(device)
-
-    if model["common"]["cuda"]:
-        torch.backends.cudnn.benchmark = True
 
     if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
         try:
@@ -86,11 +85,12 @@ def main(args):
     if args.checkpoint:
 
         def map_location(storage, _):
-            return storage.cuda() if model["common"]["cuda"] else storage.cpu()
+            return storage.cuda() if torch.cuda.is_available() else storage.cpu()
 
         # https://github.com/pytorch/pytorch/issues/7178
         chkpt = torch.load(args.checkpoint, map_location=map_location)
         net.load_state_dict(chkpt["state_dict"])
+        log.log("Using checkpoint: {}".format(args.checkpoint))
 
         if args.resume:
             optimizer.load_state_dict(chkpt["optimizer"])
@@ -114,8 +114,8 @@ def main(args):
         sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
 
     history = collections.defaultdict(list)
-    log = Log(os.path.join(model["common"]["checkpoint"], "log"))
 
+    log.log("")
     log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
     log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
@@ -126,6 +126,7 @@ def main(args):
     if "weight" in locals():
         log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
     log.log("---")
+    log.log("")
 
     for epoch in range(resume, num_epochs):
         log.log("Epoch: {}/{}".format(epoch + 1, num_epochs))
