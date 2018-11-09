@@ -90,12 +90,12 @@ def main(args):
                 prob = directory.unbuffer(prob)
 
                 assert prob.shape[0] == 2, "single channel requires binary model"
-                assert np.allclose(np.sum(prob, axis=0), 1.), "single channel requires probabilities to sum up to one"
+                assert np.allclose(np.sum(prob, axis=0), 1.0), "single channel requires probabilities to sum up to one"
 
                 foreground = prob[1:, :, :]
                 image = np.around(foreground) if args.masks_output else np.digitize(foreground, np.linspace(0, 1, 256))
 
-                out = Image.fromarray(image.squeeze().astype("uint8"), mode="P")
+                out = Image.fromarray(image.squeeze().astype(np.uint8), mode="P")
                 out.putpalette(palette)
 
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
