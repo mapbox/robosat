@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
 from tqdm import tqdm
-from PIL import Image
+from cv2 import imwrite, applyColorMap
 
 from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.tiles import tiles_from_slippy_map
@@ -72,7 +72,10 @@ def main(args):
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
-    palette = make_palette("denim", "orange") if args.masks_output else continuous_palette_for_color("pink", 256)
+    if args.masks_output:
+        colormap = make_palette("white", "pink", colormap=True)
+    else:
+        colormap = continuous_palette_for_color("pink", 256, colormap=True)
 
     # don't track tensors with autograd during prediction
     with torch.no_grad():
@@ -92,16 +95,15 @@ def main(args):
                 assert prob.shape[0] == 2, "single channel requires binary model"
                 assert np.allclose(np.sum(prob, axis=0), 1.0), "single channel requires probabilities to sum up to one"
 
-                foreground = prob[1:, :, :]
-                image = np.around(foreground) if args.masks_output else np.digitize(foreground, np.linspace(0, 1, 256))
-
-                out = Image.fromarray(image.squeeze().astype(np.uint8), mode="P")
-                out.putpalette(palette)
+                if args.masks_output:
+                    image = np.around(prob[1:, :, :]).astype(np.uint8).squeeze()
+                else:
+                    image = (prob[1:, :, :] * 255).astype(np.uint8).squeeze()
 
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
                 path = os.path.join(args.probs, str(z), str(x), str(y) + ".png")
 
-                out.save(path, optimize=True)
+                imwrite(path, applyColorMap(image, colormap))
 
     if args.leaflet:
         leaflet(args.probs, args.leaflet, [tile for tile, _ in tiles_from_slippy_map(args.tiles)], "png")

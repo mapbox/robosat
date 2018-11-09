@@ -12,7 +12,9 @@ import csv
 import io
 import os
 
-from PIL import Image
+import cv2
+import numpy as np
+
 from rasterio.warp import transform
 from rasterio.crs import CRS
 import mercantile
@@ -138,22 +140,6 @@ def tiles_from_csv(path):
             yield mercantile.Tile(*map(int, row))
 
 
-def stitch_image(into, into_box, image, image_box):
-    """Stitches two images together in-place.
-
-    Args:
-      into: the image to stitch into and modify in-place.
-      into_box: left, upper, right, lower image coordinates for where to place `image` in `into`.
-      image: the image to stitch into `into`.
-      image_box: left, upper, right, lower image coordinates for where to extract the sub-image from `image`.
-
-    Note:
-      Both boxes must be of same size.
-    """
-
-    into.paste(image.crop(box=image_box), box=into_box)
-
-
 def adjacent_tile(tile, dx, dy, tiles):
     """Retrieves an adjacent tile from a tile store.
 
@@ -168,16 +154,17 @@ def adjacent_tile(tile, dx, dy, tiles):
     """
 
     x, y, z = map(int, [tile.x, tile.y, tile.z])
-    other = mercantile.Tile(x=x + dx, y=y + dy, z=z)
+    adjacent = mercantile.Tile(x=x + dx, y=y + dy, z=z)
 
     try:
-        path = tiles[other]
-        return Image.open(path).convert("RGB")
+        path = tiles[adjacent]
     except KeyError:
         return None
 
+    return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
-def buffer_tile_image(tile, tiles, overlap, tile_size, nodata=0):
+
+def buffer_tile_image(tile, tiles, overlap, tile_size):
     """Buffers a tile image adding borders on all sides based on adjacent tiles.
 
     Args:
@@ -185,46 +172,45 @@ def buffer_tile_image(tile, tiles, overlap, tile_size, nodata=0):
       tiles: available tiles; must be a mapping of tiles to their filesystem paths.
       overlap: the tile border to add on every side; in pixel.
       tile_size: the tile size.
-      nodata: the color value to use when no adjacent tile is available.
 
     Returns:
       The composite image containing the original tile plus tile overlap on all sides.
       It's size is `tile_size` + 2 * `overlap` pixel for each side.
     """
 
+    assert 0 <= overlap <= tile_size, "Overlap value can't be either negative or bigger than tile_size"
+
     tiles = dict(tiles)
     x, y, z = map(int, [tile.x, tile.y, tile.z])
 
-    # Todo: instead of nodata we should probably mirror the center image
-    composite_size = tile_size + 2 * overlap
-    composite = Image.new(mode="RGB", size=(composite_size, composite_size), color=nodata)
-
-    path = tiles[tile]
-    center = Image.open(path).convert("RGB")
-    composite.paste(center, box=(overlap, overlap))
-
     # 3x3 matrix (upper, center, bottom) x (left, center, right)
     ul = adjacent_tile(tile, -1, -1, tiles)
-    ur = adjacent_tile(tile, +1, -1, tiles)
-    bl = adjacent_tile(tile, -1, +1, tiles)
-    br = adjacent_tile(tile, +1, +1, tiles)
     uc = adjacent_tile(tile, +0, -1, tiles)
+    ur = adjacent_tile(tile, +1, -1, tiles)
     cl = adjacent_tile(tile, -1, +0, tiles)
-    bc = adjacent_tile(tile, +0, +1, tiles)
+    cc = adjacent_tile(tile, +0, +0, tiles)
     cr = adjacent_tile(tile, +1, +0, tiles)
+    bl = adjacent_tile(tile, -1, +1, tiles)
+    bc = adjacent_tile(tile, +0, +1, tiles)
+    br = adjacent_tile(tile, +1, +1, tiles)
 
-    def maybe_stitch(maybe_tile, composite_box, tile_box):
-        if maybe_tile:
-            stitch_image(composite, composite_box, maybe_tile, tile_box)
-
+    ts = tile_size
     o = overlap
-    maybe_stitch(ul, (0, 0, o, o), (tile_size - o, tile_size - o, tile_size, tile_size))
-    maybe_stitch(ur, (tile_size + o, 0, composite_size, o), (0, tile_size - o, o, tile_size))
-    maybe_stitch(bl, (0, composite_size - o, o, composite_size), (tile_size - o, 0, tile_size, o))
-    maybe_stitch(br, (composite_size - o, composite_size - o, composite_size, composite_size), (0, 0, o, o))
-    maybe_stitch(uc, (o, 0, composite_size - o, o), (0, tile_size - o, tile_size, tile_size))
-    maybe_stitch(cl, (0, o, o, composite_size - o), (tile_size - o, 0, tile_size, tile_size))
-    maybe_stitch(bc, (o, composite_size - o, composite_size - o, composite_size), (0, 0, tile_size, o))
-    maybe_stitch(cr, (composite_size - o, o, composite_size, composite_size - o), (0, 0, o, tile_size))
+    oo = overlap * 2
 
-    return composite
+    # Todo: instead of nodata we should probably mirror the center image
+    img = np.zeros((ts + oo, ts + oo, 3)).astype(np.uint8)
+
+    # fmt:off
+    img[0:o,        0:o,        :] = ul[-o:ts, -o:ts, :] if ul is not None else np.zeros((o,   o, 3)).astype(np.uint8)
+    img[0:o,        o:ts+o,     :] = uc[-o:ts,  0:ts, :] if uc is not None else np.zeros((o,  ts, 3)).astype(np.uint8)
+    img[0:o,        ts+o:ts+oo, :] = ur[-o:ts,   0:o, :] if ur is not None else np.zeros((o,   o, 3)).astype(np.uint8)
+    img[o:ts+o,     0:o,        :] = cl[0:ts,  -o:ts, :] if cl is not None else np.zeros((ts,  o, 3)).astype(np.uint8)
+    img[o:ts+o,     o:ts+o,     :] = cc                  if cc is not None else np.zeros((ts, ts, 3)).astype(np.uint8)
+    img[o:ts+o,     ts+o:ts+oo, :] = cr[0:ts,    0:o, :] if cr is not None else np.zeros((ts,  o, 3)).astype(np.uint8)
+    img[ts+o:ts+oo, 0:o,        :] = bl[0:o,   -o:ts, :] if bl is not None else np.zeros((o,   o, 3)).astype(np.uint8)
+    img[ts+o:ts+oo, o:ts+o,     :] = bc[0:o,    0:ts, :] if bc is not None else np.zeros((o,  ts, 3)).astype(np.uint8)
+    img[ts+o:ts+oo, ts+o:ts+oo, :] = br[0:o,     0:o, :] if br is not None else np.zeros((o,   o, 3)).astype(np.uint8)
+    # fmt:on
+
+    return img
