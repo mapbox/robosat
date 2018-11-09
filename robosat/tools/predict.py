@@ -72,6 +72,8 @@ def main(args):
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
+    palette = make_palette("denim", "orange") if args.masks_output else continuous_palette_for_color("pink", 256)
+
     # don't track tensors with autograd during prediction
     with torch.no_grad():
         for images, tiles in tqdm(loader, desc="Eval", unit="batch", ascii=True):
@@ -91,18 +93,9 @@ def main(args):
                 assert np.allclose(np.sum(prob, axis=0), 1.), "single channel requires probabilities to sum up to one"
 
                 foreground = prob[1:, :, :]
+                image = np.around(foreground) if args.masks_output else np.digitize(foreground, np.linspace(0, 1, 256))
 
-                if args.masks_output:
-                    # Quantize the floating point prob in [0,1] to {0,1} with a fixed palette attached
-                    image = np.around(foreground)
-                    palette = make_palette("denim", "orange")
-
-                else:
-                    # Quantize the floating point prob in [0,1] to [0,255] with a continuous color palette attached
-                    image = np.digitize(foreground, np.linspace(0, 1, 256))
-                    palette = continuous_palette_for_color("pink", 256)
-
-                out = Image.fromarray(image.squeeze().astype(np.uint8), mode="P")
+                out = Image.fromarray(image.squeeze().astype("uint8"), mode="P")
                 out.putpalette(palette)
 
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
