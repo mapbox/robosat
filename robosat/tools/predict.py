@@ -36,7 +36,6 @@ def add_parser(subparser):
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
     parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
-    parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
@@ -45,29 +44,23 @@ def add_parser(subparser):
 
 
 def main(args):
-    model = load_config(args.model)
     dataset = load_config(args.dataset)
+    num_classes = len(dataset["common"]["classes"])
 
-    cuda = model["common"]["cuda"]
-
-    device = torch.device("cuda" if cuda else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        torch.backends.cudnn.benchmark = True
+    else:
+        device = torch.device("cpu")
 
     def map_location(storage, _):
-        return storage.cuda() if cuda else storage.cpu()
-
-    if cuda and not torch.cuda.is_available():
-        sys.exit("Error: CUDA requested but not available")
-
-    num_classes = len(dataset["common"]["classes"])
+        return storage.cuda() if torch.cuda.is_available() else storage.cpu()
 
     # https://github.com/pytorch/pytorch/issues/7178
     chkpt = torch.load(args.checkpoint, map_location=map_location)
 
     net = UNet(num_classes).to(device)
     net = nn.DataParallel(net)
-
-    if cuda:
-        torch.backends.cudnn.benchmark = True
 
     net.load_state_dict(chkpt["state_dict"])
     net.eval()
