@@ -56,6 +56,7 @@ def main(args):
     model = load_config(args.model)
     dataset = load_config(args.dataset)
 
+    os.makedirs(model["common"]["checkpoint"], exist_ok=True)
     log = Log(os.path.join(model["common"]["checkpoint"], "log"))
 
     if torch.cuda.is_available():
@@ -65,8 +66,6 @@ def main(args):
     else:
         device = torch.device("cpu")
         log.log("RoboSat - training on CPU, with {} workers", format(args.workers))
-
-    os.makedirs(model["common"]["checkpoint"], exist_ok=True)
 
     num_classes = len(dataset["common"]["classes"])
     net = UNet(num_classes)
