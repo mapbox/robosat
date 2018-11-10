@@ -1,5 +1,6 @@
 import argparse
 
+import os
 import torch
 import torch.onnx
 import torch.autograd
@@ -27,6 +28,7 @@ def main(args):
     num_classes = len(dataset["common"]["classes"])
     net = UNet(num_classes)
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = "" # to be sure GPUs if any won't be used
     def map_location(storage, _):
         return storage.cpu()
 
