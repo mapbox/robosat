@@ -161,7 +161,7 @@ def adjacent_tile_image(tile, dx, dy, tiles):
     except KeyError:
         return None
 
-    assert path[-5] == ".webp" # OpenCV AFAIK not handling PNG Palette
+    assert path[-5:] == ".webp" # OpenCV AFAIK not handling PNG Palette
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
 
