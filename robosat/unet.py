@@ -12,6 +12,7 @@ See:
 import torch
 import torch.nn as nn
 
+from copy import deepcopy
 from torchvision.models import resnet50
 
 
@@ -70,7 +71,7 @@ class DecoderBlock(nn.Module):
           The networks output tensor.
         """
 
-        return self.block(nn.functional.upsample(x, scale_factor=2, mode="nearest"))
+        return self.block(nn.functional.interpolate(x, scale_factor=2, mode="nearest"))
 
 
 class UNet(nn.Module):
@@ -79,7 +80,7 @@ class UNet(nn.Module):
        Also known as AlbuNet due to its inventor Alexander Buslaev.
     """
 
-    def __init__(self, num_classes, num_filters=32, pretrained=True):
+    def __init__(self, num_classes, num_filters=32, num_channels=3, pretrained=True):
         """Creates an `UNet` instance for semantic segmentation.
 
         Args:
@@ -89,12 +90,14 @@ class UNet(nn.Module):
 
         super().__init__()
 
-        # Todo: make input channels configurable, not hard-coded to three channels for RGB
-
         self.resnet = resnet50(pretrained=pretrained)
 
-        # Access resnet directly in forward pass; do not store refs here due to
-        # https://github.com/pytorch/pytorch/issues/8392
+        # Give a look at https://github.com/pytorch/pytorch/issues/8392 for deepcopy stuff
+        self.enc0 = nn.Sequential(deepcopy(self.resnet.conv1), nn.Conv2d(num_channels, 64, 3, padding=1, bias=False))
+        self.enc1 = deepcopy(self.resnet.layer1)
+        self.enc2 = deepcopy(self.resnet.layer2)
+        self.enc3 = deepcopy(self.resnet.layer3)
+        self.enc4 = deepcopy(self.resnet.layer4)
 
         self.center = DecoderBlock(2048, num_filters * 8)
 

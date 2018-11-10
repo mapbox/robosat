@@ -37,7 +37,7 @@ six==1.11.0
 snuggs==1.4.1
 supermercado==0.0.5
 toml==0.9.4
-torch==0.4.0
+torch==0.4.1
 torchvision==0.2.1
 tqdm==4.23.4
 urllib3==1.22
