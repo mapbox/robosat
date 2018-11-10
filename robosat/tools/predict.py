@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
 from tqdm import tqdm
-from cv2 import imwrite, applyColorMap
+from PIL import Image
 
 from robosat.datasets import BufferedSlippyMapDirectory
 from robosat.tiles import tiles_from_slippy_map
@@ -73,9 +73,9 @@ def main(args):
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
     if args.masks_output:
-        colormap = make_palette("white", "pink", colormap=True)
+        palette = make_palette("white", "pink")
     else:
-        colormap = continuous_palette_for_color("pink", 256, colormap=True)
+        palette = continuous_palette_for_color("pink", 256)
 
     # don't track tensors with autograd during prediction
     with torch.no_grad():
@@ -100,10 +100,13 @@ def main(args):
                 else:
                     image = (prob[1:, :, :] * 255).astype(np.uint8).squeeze()
 
+                out = Image.fromarray(image, mode="P")
+                out.putpalette(palette)
+
                 os.makedirs(os.path.join(args.probs, str(z), str(x)), exist_ok=True)
                 path = os.path.join(args.probs, str(z), str(x), str(y) + ".png")
 
-                imwrite(path, applyColorMap(image, colormap))
+                out.save(path, optimize=True)
 
     if args.leaflet:
         leaflet(args.probs, args.leaflet, [tile for tile, _ in tiles_from_slippy_map(args.tiles)], "png")

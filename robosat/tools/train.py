@@ -261,17 +261,19 @@ def get_dataset_loaders(model, dataset, workers):
         ]
     )
 
-    batch_size = model["common"]["batch_size"]
-    path = dataset["common"]["dataset"]
-
     train_dataset = SlippyMapTilesConcatenation(
-        os.path.join(path, "training", "images"), os.path.join(path, "training", "labels"), transform
+        os.path.join(dataset["common"]["dataset"], "training", "images"),
+        os.path.join(dataset["common"]["dataset"], "training", "labels"),
+        joint_transform=transform,
     )
 
     val_dataset = SlippyMapTilesConcatenation(
-        os.path.join(path, "validation", "images"), os.path.join(path, "validation", "labels"), transform
+        os.path.join(dataset["common"]["dataset"], "validation", "images"),
+        os.path.join(dataset["common"]["dataset"], "validation", "labels"),
+        joint_transform=transform,
     )
 
+    batch_size = model["common"]["batch_size"]
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=workers)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=workers)
 

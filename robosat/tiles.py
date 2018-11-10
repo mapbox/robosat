@@ -140,11 +140,11 @@ def tiles_from_csv(path):
             yield mercantile.Tile(*map(int, row))
 
 
-def adjacent_tile(tile, dx, dy, tiles):
-    """Retrieves an adjacent tile from a tile store.
+def adjacent_tile_image(tile, dx, dy, tiles):
+    """Retrieves an adjacent tile image from a tile store.
 
     Args:
-      tile: the original tile to get an adjacent tile for.
+      tile: the original tile to get an adjacent tile image for.
       dx: the offset in tile x direction.
       dy: the offset in tile y direction.
       tiles: the tile store to get tiles from; must support `__getitem__` with tiles.
@@ -161,6 +161,7 @@ def adjacent_tile(tile, dx, dy, tiles):
     except KeyError:
         return None
 
+    assert path[-5] == ".webp" # OpenCV AFAIK not handling PNG Palette
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
 
@@ -184,15 +185,15 @@ def buffer_tile_image(tile, tiles, overlap, tile_size):
     x, y, z = map(int, [tile.x, tile.y, tile.z])
 
     # 3x3 matrix (upper, center, bottom) x (left, center, right)
-    ul = adjacent_tile(tile, -1, -1, tiles)
-    uc = adjacent_tile(tile, +0, -1, tiles)
-    ur = adjacent_tile(tile, +1, -1, tiles)
-    cl = adjacent_tile(tile, -1, +0, tiles)
-    cc = adjacent_tile(tile, +0, +0, tiles)
-    cr = adjacent_tile(tile, +1, +0, tiles)
-    bl = adjacent_tile(tile, -1, +1, tiles)
-    bc = adjacent_tile(tile, +0, +1, tiles)
-    br = adjacent_tile(tile, +1, +1, tiles)
+    ul = adjacent_tile_image(tile, -1, -1, tiles)
+    uc = adjacent_tile_image(tile, +0, -1, tiles)
+    ur = adjacent_tile_image(tile, +1, -1, tiles)
+    cl = adjacent_tile_image(tile, -1, +0, tiles)
+    cc = adjacent_tile_image(tile, +0, +0, tiles)
+    cr = adjacent_tile_image(tile, +1, +0, tiles)
+    bl = adjacent_tile_image(tile, -1, +1, tiles)
+    bc = adjacent_tile_image(tile, +0, +1, tiles)
+    br = adjacent_tile_image(tile, +1, +1, tiles)
 
     ts = tile_size
     o = overlap

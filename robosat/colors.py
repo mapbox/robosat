@@ -43,7 +43,7 @@ class Mapbox(Enum):
     pink = _rgb("#ed6498")
 
 
-def make_palette(*colors, colormap=False):
+def make_palette(*colors):
     """Builds a PIL-compatible color palette from color names.
 
     Args:
@@ -53,15 +53,7 @@ def make_palette(*colors, colormap=False):
     assert 0 < len(colors) <= 256
     rgbs = [Mapbox[color].value for color in colors]
 
-    if colormap:
-        palette = np.zeros((256, 1, 3), np.uint8)
-        for i in range(len(colors)):
-            r, g, b = rgbs[i]
-            palette[i, 0, :] = b, g, r
-    else:
-        palette = list(sum(rgbs, ()))
-
-    return palette
+    return list(sum(rgbs, ()))
 
 
 def color_string_to_rgb(color):
@@ -77,7 +69,7 @@ def color_string_to_rgb(color):
     return [*map(int, color.split(","))]
 
 
-def continuous_palette_for_color(color, bins=256, colormap=False):
+def continuous_palette_for_color(color, bins=256):
     """Creates a continuous color palette based on a single color.
 
     Args:
@@ -95,14 +87,11 @@ def continuous_palette_for_color(color, bins=256, colormap=False):
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
 
     assert 0 < bins <= 256
-    palette = np.zeros((256, 1, 3), np.uint8) if colormap else list()
 
+    palette = []
     for i in range(bins):
         r, g, b = [int(v * 255) for v in colorsys.hsv_to_rgb(h, (1 / bins) * (i + 1), v)]
-        if colormap:
-            palette[i, 0, :] = b, g, r
-        else:
-            palette.extend(r, g, b)
+        palette.extend(r, g, b)
 
     return palette
 
