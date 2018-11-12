@@ -15,14 +15,17 @@
   # Note: available colors can be found in `robosat/colors.py`
   colors  = ['denim', 'orange']
 
-  # Input Tensor is composed by several images bands
-  # Channels configuration let your indicate wich dataset sub-directory and band are concerned
-  # Order is meaningful, syntax is: directory_name:band_number (1-n notation)
-  channels = ['images:1', 'images:2', 'images:3']
-
 
 # Dataset specific class weights computes on the training data.
 # Needed by 'mIoU' and 'CrossEntropy' losses to deal with unbalanced classes.
 # Note: use `./rs weights -h` to compute these for new datasets.
 [weights]
   values = [1.6248, 5.762827]
+
+
+# Channels configuration let your indicate wich dataset sub-directory and bands to take as input
+# You could so, add several channels blocks to compose your input Tensor. Orders are meaningful.
+[[channels]]
+type = "file"
+sub = "images"
+bands = [1,2,3]

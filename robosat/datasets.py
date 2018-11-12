@@ -47,8 +47,6 @@ class SlippyMapTiles(torch.utils.data.Dataset):
                 g = image[:, :, 0]
                 image[:, :, 0] = image[:, :, 2]
                 image[:, :, 2] = g
-            else:
-                image = image.reshape(image.shape[0], image.shape[1], 1)
 
         elif self.mode == "mask":
             image = np.array(Image.open(path).convert("P"))
@@ -64,21 +62,18 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
     """Dataset to concate multiple input images stored in slippy map format.
     """
 
-    def __init__(self, input_path, channels, target, joint_transform=None):
+    def __init__(self, path, channels, target, joint_transform=None):
         super().__init__()
 
         assert len(channels), "Channels configuration empty"
-
+        self.channels = channels
         self.inputs = dict()
+
         for channel in channels:
-            try:
-                name, band = channel.split(":")
-                self.inputs[name] = SlippyMapTiles(os.path.join(input_path, name), mode="multibands")
-            except:
-                sys.exit("Channels configuration issue")
+            for band in channel["bands"]:
+                self.inputs[channel["sub"]] = SlippyMapTiles(os.path.join(path, channel["sub"]), mode="multibands")
 
         self.target = SlippyMapTiles(target, mode="mask")
-        self.channels = channels
 
         # No transformations in the `SlippyMapTiles` instead joint transformations in getitem
         self.joint_transform = joint_transform
@@ -92,11 +87,13 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
 
         for channel in self.channels:
             try:
-                name, band = channel.split(":")
-                data, input_tile = self.inputs[name][i]
-                assert input_tile == tile
-                data = data[:, :, int(band) - 1].reshape(mask.shape[0], mask.shape[1], 1)
-                tensor = np.concatenate((tensor, data), axis=2) if "tensor" in locals() else data
+                data, band_tile = self.inputs[channel["sub"]][i]
+                assert band_tile == tile
+
+                for band in channel["bands"]:
+                    data_band = data[:, :, int(band) - 1] if len(data.shape) == 3 else data_band
+                    data_band = data_band.reshape(mask.shape[0], mask.shape[1], 1)
+                    tensor = np.concatenate((tensor, data_band), axis=2) if "tensor" in locals() else data_band
             except:
                 sys.exit("Unable to concatenate input Tensor")
 

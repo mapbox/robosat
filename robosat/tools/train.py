@@ -68,7 +68,9 @@ def main(args):
         log.log("RoboSat - training on CPU, with {} workers", format(args.workers))
 
     num_classes = len(dataset["common"]["classes"])
-    num_channels = len(dataset["common"]["channels"])
+    num_channels = 0
+    for channel in dataset["channels"]:
+        num_channels += len(channel["bands"])
     pretrained = model["opt"]["pretrained"]
     net = DataParallel(UNet(num_classes, num_channels=num_channels, pretrained=pretrained)).to(device)
 
@@ -116,8 +118,11 @@ def main(args):
 
     log.log("")
     log.log("--- Input tensor from Dataset: {} ---".format(dataset["common"]["dataset"]))
-    for i in range(len(dataset["common"]["channels"])):
-        log.log("Channel {}:\t\t {}".format(i + 1, dataset["common"]["channels"][i]))
+    num_channel = 1
+    for channel in dataset["channels"]:
+        for band in channel["bands"]:
+            log.log("Channel {}:\t\t {}[band: {}]".format(num_channel, channel["sub"], band))
+            num_channel += 1
     log.log("")
     log.log("--- Hyper Parameters ---")
     log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
@@ -129,10 +134,10 @@ def main(args):
     log.log("ResNet pre-trained:\t {}".format(model["opt"]["pretrained"]))
     if "weight" in locals():
         log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
-    log.log("---")
     log.log("")
 
     for epoch in range(resume, num_epochs):
+        log.log("---")
         log.log("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
         train_hist = train(train_loader, num_classes, device, net, optimizer, criterion)
@@ -265,14 +270,14 @@ def get_dataset_loaders(model, dataset, workers):
 
     train_dataset = SlippyMapTilesConcatenation(
         os.path.join(dataset["common"]["dataset"], "training"),
-        dataset["common"]["channels"],
+        dataset["channels"],
         os.path.join(dataset["common"]["dataset"], "training", "labels"),
         joint_transform=transform,
     )
 
     val_dataset = SlippyMapTilesConcatenation(
         os.path.join(dataset["common"]["dataset"], "validation"),
-        dataset["common"]["channels"],
+        dataset["channels"],
         os.path.join(dataset["common"]["dataset"], "validation", "labels"),
         joint_transform=transform,
     )
