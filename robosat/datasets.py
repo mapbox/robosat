@@ -5,6 +5,8 @@ Guaranteed to implement `__len__`, and `__getitem__`.
 See: http://pytorch.org/docs/0.3.1/data.html
 """
 
+import os
+import sys
 import torch
 from PIL import Image
 import torch.utils.data
@@ -38,6 +40,16 @@ class SlippyMapTiles(torch.utils.data.Dataset):
         if self.mode == "image":
             image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
+        elif self.mode == "multibands":
+            image = cv2.imread(path, cv2.IMREAD_ANYCOLOR)
+            if len(image.shape) == 3 and image.shape[2] >= 3:
+                # FIXME Look twice to find an in-place way to perform a multiband BGR2RGB
+                g = image[:, :, 0]
+                image[:, :, 0] = image[:, :, 2]
+                image[:, :, 2] = g
+            else:
+                image = image.reshape(image.shape[0], image.shape[1], 1)
+
         elif self.mode == "mask":
             image = np.array(Image.open(path).convert("P"))
 
@@ -52,31 +64,46 @@ class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
     """Dataset to concate multiple input images stored in slippy map format.
     """
 
-    def __init__(self, input, target, joint_transform=None):
+    def __init__(self, input_path, channels, target, joint_transform=None):
         super().__init__()
+
+        assert len(channels), "Channels configuration empty"
+
+        self.inputs = dict()
+        for channel in channels:
+            try:
+                name, band = channel.split(":")
+                self.inputs[name] = SlippyMapTiles(os.path.join(input_path, name), mode="multibands")
+            except:
+                sys.exit("Channels configuration issue")
+
+        self.target = SlippyMapTiles(target, mode="mask")
+        self.channels = channels
 
         # No transformations in the `SlippyMapTiles` instead joint transformations in getitem
         self.joint_transform = joint_transform
-
-        self.target = SlippyMapTiles(target, mode="mask")
-        self.input = SlippyMapTiles(input, mode="image")
-
-        assert len(self.input) == len(self.target), "same number of tiles in images and label"
 
     def __len__(self):
         return len(self.target)
 
     def __getitem__(self, i):
 
-        image, image_tile = self.input[i]
-        mask, mask_tile = self.target[i]
+        mask, tile = self.target[i]
 
-        assert image_tile == mask_tile, "image tile is the same as label tile"
+        for channel in self.channels:
+            try:
+                name, band = channel.split(":")
+                data, input_tile = self.inputs[name][i]
+                assert input_tile == tile
+                data = data[:, :, int(band) - 1].reshape(mask.shape[0], mask.shape[1], 1)
+                tensor = np.concatenate((tensor, data), axis=2) if "tensor" in locals() else data
+            except:
+                sys.exit("Unable to concatenate input Tensor")
 
         if self.joint_transform is not None:
-            image, mask = self.joint_transform(image, mask)
+            tensor, mask = self.joint_transform(tensor, mask)
 
-        return image, mask, image_tile[0]
+        return tensor, mask, tile
 
 
 # Todo: once we have the SlippyMapDataset this dataset should wrap

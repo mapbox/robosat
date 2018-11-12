@@ -80,24 +80,30 @@ class UNet(nn.Module):
        Also known as AlbuNet due to its inventor Alexander Buslaev.
     """
 
-    def __init__(self, num_classes, num_filters=32, num_channels=3, pretrained=True):
+    def __init__(self, num_classes, num_channels=3, num_filters=32, pretrained=True):
         """Creates an `UNet` instance for semantic segmentation.
 
         Args:
           num_classes: number of classes to predict.
-          pretrained: use ImageNet pre-trained backbone feature extractor
+          num_channels: number of inputs channels (e.g bands)
+          pretrained: use ImageNet pre-trained ResNet Encoder weights
         """
 
         super().__init__()
 
         self.resnet = resnet50(pretrained=pretrained)
 
-        # Give a look at https://github.com/pytorch/pytorch/issues/8392 for deepcopy stuff
-        self.enc0 = nn.Sequential(deepcopy(self.resnet.conv1), nn.Conv2d(num_channels, 64, 3, padding=1, bias=False))
-        self.enc1 = deepcopy(self.resnet.layer1)
-        self.enc2 = deepcopy(self.resnet.layer2)
-        self.enc3 = deepcopy(self.resnet.layer3)
-        self.enc4 = deepcopy(self.resnet.layer4)
+        assert num_channels
+
+        if num_channels != 3:
+            weights = nn.init.xavier_uniform_(torch.zeros((64, num_channels, 7, 7)))
+            if pretrained:
+                for c in range(min(num_channels, 3)):
+                    weights.data[:, c, :, :] = self.resnet.conv1.weight.data[:, c, :, :]
+            self.resnet.conv1 = nn.Conv2d(num_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            self.resnet.conv1.weight = nn.Parameter(weights)
+
+        # No encoder reference, give a look at https://github.com/pytorch/pytorch/issues/8392
 
         self.center = DecoderBlock(2048, num_filters * 8)
 

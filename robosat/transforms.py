@@ -8,7 +8,7 @@ import numpy as np
 
 
 class ImageToTensor:
-    """Callable to convert a OpenCV H,W,C image into a PyTorch tensor.
+    """Callable to convert a NumPy H,W,C image into a PyTorch C,W,H tensor.
     """
 
     def __call__(self, image):
@@ -25,7 +25,7 @@ class ImageToTensor:
 
 
 class MaskToTensor:
-    """Callable to convert an OpenCV H,W image into a PyTorch tensor.
+    """Callable to convert a NumPy H,W image into a PyTorch tensor.
     """
 
     def __call__(self, mask):

@@ -68,9 +68,9 @@ def main(args):
         log.log("RoboSat - training on CPU, with {} workers", format(args.workers))
 
     num_classes = len(dataset["common"]["classes"])
-    net = UNet(num_classes)
-    net = DataParallel(net)
-    net = net.to(device)
+    num_channels = len(dataset["common"]["channels"])
+    pretrained = model["opt"]["pretrained"]
+    net = DataParallel(UNet(num_classes, num_channels=num_channels, pretrained=pretrained)).to(device)
 
     if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
         try:
@@ -115,13 +115,18 @@ def main(args):
     history = collections.defaultdict(list)
 
     log.log("")
-    log.log("--- Hyper Parameters on Dataset: {} ---".format(dataset["common"]["dataset"]))
+    log.log("--- Input tensor from Dataset: {} ---".format(dataset["common"]["dataset"]))
+    for i in range(len(dataset["common"]["channels"])):
+        log.log("Channel {}:\t\t {}".format(i + 1, dataset["common"]["channels"][i]))
+    log.log("")
+    log.log("--- Hyper Parameters ---")
     log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
     log.log("Data Augmentation:\t {}".format(model["opt"]["data_augmentation"]))
     log.log("Learning Rate:\t\t {}".format(model["opt"]["lr"]))
     log.log("Weight Decay:\t\t {}".format(model["opt"]["decay"]))
     log.log("Loss function:\t\t {}".format(model["opt"]["loss"]))
+    log.log("ResNet pre-trained:\t {}".format(model["opt"]["pretrained"]))
     if "weight" in locals():
         log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
     log.log("---")
@@ -158,9 +163,7 @@ def main(args):
         plot(os.path.join(model["common"]["checkpoint"], visual), history)
 
         checkpoint = "checkpoint-{:05d}-of-{:05d}.pth".format(epoch + 1, num_epochs)
-
         states = {"epoch": epoch + 1, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict()}
-
         torch.save(states, os.path.join(model["common"]["checkpoint"], checkpoint))
 
 
@@ -261,13 +264,15 @@ def get_dataset_loaders(model, dataset, workers):
     )
 
     train_dataset = SlippyMapTilesConcatenation(
-        os.path.join(dataset["common"]["dataset"], "training", "images"),
+        os.path.join(dataset["common"]["dataset"], "training"),
+        dataset["common"]["channels"],
         os.path.join(dataset["common"]["dataset"], "training", "labels"),
         joint_transform=transform,
     )
 
     val_dataset = SlippyMapTilesConcatenation(
-        os.path.join(dataset["common"]["dataset"], "validation", "images"),
+        os.path.join(dataset["common"]["dataset"], "validation"),
+        dataset["common"]["channels"],
         os.path.join(dataset["common"]["dataset"], "validation", "labels"),
         joint_transform=transform,
     )
