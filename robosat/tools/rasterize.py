@@ -47,6 +47,7 @@ def feature_to_mercator(feature):
     """
     # Ref: https://gist.github.com/dnomadb/5cbc116aacc352c7126e779c29ab7abe
 
+    # FIXME: We assume that GeoJSON input coordinates can't be anything else than EPSG:4326
     if feature["geometry"]["type"] == "Polygon":
         xys = (zip(*ring) for ring in feature["geometry"]["coordinates"])
         xys = (list(zip(*transform(CRS.from_epsg(4326), CRS.from_epsg(3857), *xy))) for xy in xys)
@@ -150,4 +151,4 @@ def main(args):
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, tiles_from_csv(args.tiles), "png")
+        leaflet(args.out, args.leaflet, [tile for tile in tiles_from_csv(args.tiles)], "png")
