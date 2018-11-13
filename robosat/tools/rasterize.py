@@ -14,12 +14,13 @@ from rasterio.transform import from_bounds
 from rasterio.features import rasterize
 from rasterio.warp import transform
 from supermercado import burntiles
-from shapely.geometry import shape, mapping
+from shapely.geometry import mapping
 
 from robosat.config import load_config
 from robosat.colors import make_palette
 from robosat.tiles import tiles_from_csv
 from robosat.utils import leaflet
+from robosat.log import Log
 
 
 def add_parser(subparser):
@@ -96,20 +97,42 @@ def main(args):
 
     # Find all tiles the features cover and make a map object for quick lookup.
     feature_map = collections.defaultdict(list)
+    log = Log(os.path.join(args.out, "log"), out=sys.stderr)
+
+    def parse_polygon(feature_map, polygon, i):
+
+        try:
+            for i, ring in enumerate(polygon["coordinates"]):  # GeoJSON coordinates could be N dimensionals
+                polygon["coordinates"][i] = [[x, y] for point in ring for x, y in zip([point[0]], [point[1]])]
+
+            for tile in burntiles.burn([{"type": "feature", "geometry": polygon}], zoom=args.zoom):
+                feature_map[mercantile.Tile(*tile)].append({"type": "feature", "geometry": polygon})
+
+        except ValueError as e:
+            log.log("Warning: invalid feature {}, skipping".format(i))
+
+        return feature_map
+
+    def parse_geometry(feature_map, geometry, i):
+
+        if geometry["type"] == "Polygon":
+            feature_map = parse_polygon(feature_map, geometry, i)
+
+        elif geometry["type"] == "MultiPolygon":
+            for polygon in geometry["coordinates"]:
+                feature_map = parse_polygon(feature_map, {"type": "Polygon", "coordinates": polygon}, i)
+        else:
+            log.log("Notice: {} is a non surfacic geometry type, skipping feature {}".format(geometry["type"], i))
+
+        return feature_map
+
     for i, feature in enumerate(tqdm(fc["features"], ascii=True, unit="feature")):
 
-        if feature["geometry"]["type"] == "Polygon":
-            feature["geometry"]["coordinates"] = [feature["geometry"]["coordinates"]]
-            feature["geometry"]["type"] = "MultiPolygon"
-
-        for polygon in shape(feature["geometry"]):
-            simple_feature = {"type": "feature", "geometry": mapping(polygon)}
-            try:
-                for tile in burntiles.burn([simple_feature], zoom=args.zoom):
-                    feature_map[mercantile.Tile(*tile)].append(simple_feature)
-            except ValueError as e:
-                print("Warning: invalid feature {}, skipping".format(i), file=sys.stderr)
-                continue
+        if feature["geometry"]["type"] == "GeometryCollection":
+            for geometry in feature["geometry"]["geometries"]:
+                feature_map = parse_geometry(feature_map, geometry, i)
+        else:
+            feature_map = parse_geometry(feature_map, feature["geometry"], i)
 
     # Burn features to tiles and write to a slippy map directory.
     for tile in tqdm(list(tiles_from_csv(args.tiles)), ascii=True, unit="tile"):
