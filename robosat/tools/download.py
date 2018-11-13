@@ -68,9 +68,10 @@ def main(args):
                 elif args.type == "WMS":
                     xmin, ymin, xmax, ymax = tile_to_bbox(tile)
                     url = args.url.format(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
+                else:
+                    return tile, None, False
 
                 res = fetch_image(session, url, args.timeout)
-
                 if not res:
                     return tile, url, False
 
