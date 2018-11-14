@@ -1,5 +1,5 @@
 import re
-import os 
+import os
 from robosat.tiles import pixel_to_location
 import mercantile
 import json
@@ -37,7 +37,7 @@ def leaflet(out, base_url, tiles, ext):
     leaflet = re.sub("{{grid}}", grid, leaflet)
 
     # Could surely be improve, but for now, took the first tile to center on
-    tile = (list(tiles)[0])
+    tile = list(tiles)[0]
     x, y, z = map(int, [tile.x, tile.y, tile.z])
     leaflet = re.sub("{{zoom}}", str(z), leaflet)
     leaflet = re.sub("{{center}}", str(list(pixel_to_location(tile, 0.5, 0.5))[::-1]), leaflet)

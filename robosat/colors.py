@@ -99,7 +99,7 @@ def continuous_palette_for_color(color, bins=256):
 def complementary_palette(palette):
 
     comp_palette = []
-    colors = [palette[i:i+3] for i in range(0, len(palette), 3)]
+    colors = [palette[i : i + 3] for i in range(0, len(palette), 3)]
 
     for color in colors:
         r, g, b = [v for v in color]
