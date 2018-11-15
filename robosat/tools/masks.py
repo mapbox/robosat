@@ -72,7 +72,7 @@ def main(args):
 
     if args.leaflet:
         tiles = [tile for tile, _ in list(tiles_from_slippy_map(args.probs[0]))]
-        leaflet(args.masks, args.leaflet, tiles, "png")
+        leaflet(args.masks, args.leaflet, tiles, tiles, "png")
 
 
 def softvote(probs, axis=0, weights=None):

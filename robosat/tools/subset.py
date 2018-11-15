@@ -39,4 +39,4 @@ def main(args):
         shutil.copyfile(src, dst)
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, tiles, extension)
+        leaflet(args.out, args.leaflet, tiles, tiles, extension)

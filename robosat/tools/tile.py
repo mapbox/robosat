@@ -119,4 +119,5 @@ def main(args):
             sys.exit("Error: Unknown type, should be either 'image' or 'label'")
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, [tile for tile in tiles if tile not in tiles_nodata], ext)
+        tiles = [tile for tile in tiles if tile not in tiles_nodata]
+        leaflet(args.out, args.leaflet, tiles, tiles, ext)

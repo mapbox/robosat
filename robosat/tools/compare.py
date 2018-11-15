@@ -93,6 +93,7 @@ def main(args):
         palette_label = complementary_palette(palette_mask)
 
         images = tiles_from_slippy_map(args.images)
+        grid = []
 
         for tile, path in tqdm(list(images), desc="Compare", unit="image", ascii=True):
             x, y, z = list(map(str, tile))
@@ -109,7 +110,7 @@ def main(args):
 
             image = np.array(image) * 0.7
             if args.minimum_fg < fg_ratio and qod < args.minimum_qod:
-                image += np.array(Image.new("RGB", label.size, (int(255 * 0.3), 0, 0)))
+                grid.append(tile)
 
             mask.putpalette(palette_mask)
             label.putpalette(palette_label)
@@ -121,7 +122,7 @@ def main(args):
 
         if args.leaflet:
             tiles = [tile for tile, _ in tiles_from_slippy_map(args.images)]
-            leaflet(args.out, args.leaflet, tiles, "webp")
+            leaflet(args.out, args.leaflet, tiles, grid, "webp")
 
     elif args.mode == "list":
         if not args.labels or not args.masks or not args.dataset:

@@ -151,4 +151,5 @@ def main(args):
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, [tile for tile in tiles_from_csv(args.tiles)], "png")
+        tiles = [tile for tile in tiles_from_csv(args.tiles)]
+        leaflet(args.out, args.leaflet, tiles, tiles, "png")

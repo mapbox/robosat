@@ -103,4 +103,4 @@ def main(args):
         log.log("Notice:\n {} tiles already downloads previously, so skipped now.".format(already_dl))
 
     if args.leaflet:
-        leaflet(args.out, args.leaflet, tiles, args.ext)
+        leaflet(args.out, args.leaflet, tiles, tiles, args.ext)

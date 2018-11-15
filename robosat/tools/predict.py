@@ -109,4 +109,5 @@ def main(args):
                 out.save(path, optimize=True)
 
     if args.leaflet:
-        leaflet(args.probs, args.leaflet, [tile for tile, _ in tiles_from_slippy_map(args.tiles)], "png")
+        tiles = [tile for tile, _ in tiles_from_slippy_map(args.tiles)]
+        leaflet(args.probs, args.leaflet, tiles, tiles, "png")

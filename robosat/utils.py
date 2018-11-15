@@ -27,9 +27,9 @@ def plot(out, history):
     plt.close()
 
 
-def leaflet(out, base_url, tiles, ext):
+def leaflet(out, base_url, tiles, grid, ext):
 
-    grid = json.dumps([mercantile.feature(tile) for tile in tiles])
+    grid = json.dumps([mercantile.feature(tile) for tile in grid]) if grid else "''"
 
     leaflet = open("./robosat/tools/templates/leaflet.html", "r").read()
     leaflet = re.sub("{{base_url}}", base_url, leaflet)
