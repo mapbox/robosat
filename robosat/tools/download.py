@@ -35,6 +35,7 @@ def add_parser(subparser):
 def main(args):
     tiles = list(tiles_from_csv(args.tiles))
     already_dl = 0
+    dl = 0
 
     with requests.Session() as session:
         num_workers = args.rate
@@ -94,13 +95,17 @@ def main(args):
                 return tile, url, True
 
             for tile, url, ok in executor.map(worker, tiles):
-                if not url and ok:
+                if url and ok:
+                    dl += 1
+                elif not url and ok:
                     already_dl += 1
-                if not ok:
+                else:
                     log.log("Warning:\n {} failed, skipping.\n {}\n".format(tile, url))
 
     if already_dl:
-        log.log("Notice:\n {} tiles already downloads previously, so skipped now.".format(already_dl))
+        log.log("Notice:\n {} tiles were already downloaded previously, and so skipped now.".format(already_dl))
+    if already_dl + dl == len(tiles):
+        log.log(" Coverage is fully downloaded.")
 
     if args.leaflet:
         leaflet(args.out, args.leaflet, tiles, tiles, args.ext)
