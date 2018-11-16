@@ -26,6 +26,5 @@
 # Channels configuration let your indicate wich dataset sub-directory and bands to take as input
 # You could so, add several channels blocks to compose your input Tensor. Orders are meaningful.
 [[channels]]
-type = "file"
 sub = "images"
 bands = [1,2,3]
