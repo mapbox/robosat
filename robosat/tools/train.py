@@ -55,9 +55,15 @@ def add_parser(subparser):
 def main(args):
     model = load_config(args.model)
     dataset = load_config(args.dataset)
+    output_dir = model["common"]["checkpoint"]
 
-    os.makedirs(model["common"]["checkpoint"], exist_ok=True)
-    log = Log(os.path.join(model["common"]["checkpoint"], "log"))
+    if not args.resume:
+        try:
+            os.makedirs(output_dir)
+        except:
+            sys.exit("Can't create {} output dir, maybe because it's already exists ?".format(output_dir))
+
+    log = Log(os.path.join(output_dir, "log"))
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -165,11 +171,11 @@ def main(args):
             history["val " + k].append(v)
 
         visual = "history-{:05d}-of-{:05d}.png".format(epoch + 1, num_epochs)
-        plot(os.path.join(model["common"]["checkpoint"], visual), history)
+        plot(os.path.join(output_dir, visual), history)
 
         checkpoint = "checkpoint-{:05d}-of-{:05d}.pth".format(epoch + 1, num_epochs)
         states = {"epoch": epoch + 1, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict()}
-        torch.save(states, os.path.join(model["common"]["checkpoint"], checkpoint))
+        torch.save(states, os.path.join(output_dir, checkpoint))
 
 
 def train(loader, num_classes, device, net, optimizer, criterion):
