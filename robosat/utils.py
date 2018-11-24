@@ -1,9 +1,9 @@
 import re
 import os
-from robosat.tiles import pixel_to_location
-import mercantile
 import json
 import matplotlib
+from mercantile import feature
+from robosat.tiles import pixel_to_location
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
@@ -27,21 +27,35 @@ def plot(out, history):
     plt.close()
 
 
-def leaflet(out, base_url, tiles, grid, ext):
+def web_ui(out, base_url, coverage_tiles, selected_tiles, ext, template):
 
-    grid = json.dumps([mercantile.feature(tile) for tile in grid]) if grid else "''"
+    try:
+        web_ui = open(os.path.join("./robosat/tools/templates/" + template), "r").read()
+    except:
+        sys.exit("Unable to open Web UI template {}".format(template))
 
-    leaflet = open("./robosat/tools/templates/leaflet.html", "r").read()
-    leaflet = re.sub("{{base_url}}", base_url, leaflet)
-    leaflet = re.sub("{{ext}}", ext, leaflet)
-    leaflet = re.sub("{{grid}}", grid, leaflet)
+    web_ui = re.sub("{{base_url}}", base_url, web_ui)
+    web_ui = re.sub("{{ext}}", ext, web_ui)
+    web_ui = re.sub("{{tiles}}", "tiles.json" if selected_tiles else "''", web_ui)
 
-    # Could surely be improve, but for now, took the first tile to center on
-    tile = list(tiles)[0]
-    x, y, z = map(int, [tile.x, tile.y, tile.z])
-    leaflet = re.sub("{{zoom}}", str(z), leaflet)
-    leaflet = re.sub("{{center}}", str(list(pixel_to_location(tile, 0.5, 0.5))[::-1]), leaflet)
+    if coverage_tiles:
+        # Could surely be improve, but for now, took the first tile to center on
+        tile = list(coverage_tiles)[0]
+        x, y, z = map(int, [tile.x, tile.y, tile.z])
+        web_ui = re.sub("{{zoom}}", str(z), web_ui)
+        web_ui = re.sub("{{center}}", str(list(pixel_to_location(tile, 0.5, 0.5))[::-1]), web_ui)
 
-    f = open(os.path.join(out, "index.html"), "w", encoding="utf-8")
-    f.write(leaflet)
-    f.close()
+    with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as fp:
+        fp.write(web_ui)
+
+    if selected_tiles:
+        with open(os.path.join(out, "tiles.json"), "w", encoding="utf-8") as fp:
+            fp.write('{"type":"FeatureCollection","features":[')
+            first = True
+            for tile in selected_tiles:
+                prop = '"properties":{{"x":{},"y":{},"z":{}}}'.format(int(tile.x), int(tile.y), int(tile.z))
+                geom = '"geometry":{}'.format(json.dumps(feature(tile, precision=6)["geometry"]))
+                fp.write('{}{{"type":"Feature",{},{}}}'.format("," if not first else "", geom, prop))
+                first = False
+            fp.write("]}")
+
