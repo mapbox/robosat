@@ -17,9 +17,9 @@ from supermercado import burntiles
 from shapely.geometry import mapping
 
 from robosat.config import load_config
-from robosat.colors import make_palette
+from robosat.colors import make_palette, complementary_palette
 from robosat.tiles import tiles_from_csv
-from robosat.utils import leaflet
+from robosat.utils import web_ui
 from robosat.log import Log
 
 
@@ -34,7 +34,7 @@ def add_parser(subparser):
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--size", type=int, default=512, help="size of rasterized image tiles in pixels")
-    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
+    parser.add_argument("--web_ui", type=str, help="web ui client base url")
 
     parser.set_defaults(func=main)
 
@@ -83,10 +83,7 @@ def main(args):
     classes = dataset["common"]["classes"]
     colors = dataset["common"]["colors"]
     assert len(classes) == len(colors), "classes and colors coincide"
-
     assert len(colors) == 2, "only binary models supported right now"
-    bg = colors[0]
-    fg = colors[1]
 
     os.makedirs(args.out, exist_ok=True)
 
@@ -142,7 +139,7 @@ def main(args):
         else:
             out = Image.fromarray(np.zeros(shape=(args.size, args.size)).astype(int), mode="P")
 
-        palette = make_palette(bg, fg)
+        palette = complementary_palette(make_palette(colors[0], colors[1]))
         out.putpalette(palette)
 
         out_path = os.path.join(args.out, str(tile.z), str(tile.x))
@@ -150,6 +147,6 @@ def main(args):
 
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
 
-    if args.leaflet:
+    if args.web_ui:
         tiles = [tile for tile in tiles_from_csv(args.tiles)]
-        leaflet(args.out, args.leaflet, tiles, tiles, "png")
+        web_ui(args.out, args.web_ui, tiles, tiles, "png", "leaflet.html")

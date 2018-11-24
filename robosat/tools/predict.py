@@ -19,7 +19,7 @@ from robosat.unet import UNet
 from robosat.config import load_config
 from robosat.colors import continuous_palette_for_color, make_palette
 from robosat.transforms import ImageToTensor
-from robosat.utils import leaflet
+from robosat.utils import web_ui
 
 
 def add_parser(subparser):
@@ -38,7 +38,7 @@ def add_parser(subparser):
     parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
-    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
+    parser.add_argument("--web_ui", type=str, help="web ui base url")
 
     parser.set_defaults(func=main)
 
@@ -73,7 +73,7 @@ def main(args):
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
     if args.masks_output:
-        palette = make_palette("white", "pink")
+        palette = make_palette(dataset["common"]["colors"][0], dataset["common"]["colors"][1])
     else:
         palette = continuous_palette_for_color("pink", 256)
 
@@ -108,6 +108,6 @@ def main(args):
 
                 out.save(path, optimize=True)
 
-    if args.leaflet:
+    if args.web_ui:
         tiles = [tile for tile, _ in tiles_from_slippy_map(args.tiles)]
-        leaflet(args.probs, args.leaflet, tiles, tiles, "png")
+        web_ui(args.probs, args.web_ui, tiles, tiles, "png", "leaflet.html")
