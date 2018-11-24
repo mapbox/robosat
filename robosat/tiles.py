@@ -48,22 +48,6 @@ def pixel_to_location(tile, dx, dy):
     return lon, lat
 
 
-def tile_to_bbox(tile):
-    """Convert a tile to bbox coordinates
-
-    Args:
-      tile: the mercantile tile
-
-    Returns:
-       Tile's bbox coordinates (expressed in EPSG:3857)
-    """
-
-    west, south, east, north = mercantile.bounds(tile)
-    x, y = transform(CRS.from_epsg(4326), CRS.from_epsg(3857), [west, east], [north, south])
-
-    return [min(x), min(y), max(x), max(y)]
-
-
 def fetch_image(session, url, timeout=10):
     """Fetches the image representation for a tile.
 

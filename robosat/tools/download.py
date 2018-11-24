@@ -7,8 +7,9 @@ import concurrent.futures as futures
 import requests
 from PIL import Image
 from tqdm import tqdm
+from mercantile import xy_bounds
 
-from robosat.tiles import tiles_from_csv, fetch_image, tile_to_bbox
+from robosat.tiles import tiles_from_csv, fetch_image
 from robosat.utils import web_ui
 from robosat.log import Log
 
@@ -67,7 +68,7 @@ def main(args):
                     tile.y = (2 ** tile.z) - tile.y - 1
                     url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
                 elif args.type == "WMS":
-                    xmin, ymin, xmax, ymax = tile_to_bbox(tile)
+                    xmin, ymin, xmax, ymax = xy_bounds(tile)
                     url = args.url.format(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
                 else:
                     return tile, None, False
