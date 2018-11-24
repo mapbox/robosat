@@ -9,7 +9,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from robosat.tiles import tiles_from_csv, fetch_image, tile_to_bbox
-from robosat.utils import leaflet
+from robosat.utils import web_ui
 from robosat.log import Log
 
 
@@ -25,9 +25,9 @@ def add_parser(subparser):
     parser.add_argument("--rate", type=int, default=10, help="rate limit in max. requests per second")
     parser.add_argument("--type", type=str, default="XYZ", help="service type to use (e.g: XYZ, WMS or TMS)")
     parser.add_argument("--timeout", type=int, default=10, help="server request timeout (in seconds)")
+    parser.add_argument("--web_ui", type=str, help="web ui client base url")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
     parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
-    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
 
     parser.set_defaults(func=main)
 
@@ -107,5 +107,5 @@ def main(args):
     if already_dl + dl == len(tiles):
         log.log(" Coverage is fully downloaded.")
 
-    if args.leaflet:
-        leaflet(args.out, args.leaflet, tiles, tiles, args.ext)
+    if args.web_ui:
+        web_ui(args.out, args.web_ui, tiles, tiles, args.ext, "leaflet.html")

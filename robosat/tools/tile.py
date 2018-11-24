@@ -17,7 +17,7 @@ from rasterio.transform import from_bounds
 
 from robosat.config import load_config
 from robosat.colors import make_palette
-from robosat.utils import leaflet
+from robosat.utils import web_ui
 
 
 def add_parser(subparser):
@@ -32,7 +32,7 @@ def add_parser(subparser):
     parser.add_argument("--type", type=str, default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
     parser.add_argument("--no_data", type=int, help="color considered as no data [0-255]. Skip related tile")
-    parser.add_argument("--leaflet", type=str, help="leaflet client base url")
+    parser.add_argument("--web_ui", type=str, help="web ui base url")
 
     parser.set_defaults(func=main)
 
@@ -118,6 +118,6 @@ def main(args):
         else:
             sys.exit("Error: Unknown type, should be either 'image' or 'label'")
 
-    if args.leaflet:
+    if args.web_ui:
         tiles = [tile for tile in tiles if tile not in tiles_nodata]
-        leaflet(args.out, args.leaflet, tiles, tiles, ext)
+        web_ui(args.out, args.web_ui, tiles, tiles, ext, "leaflet.html")
