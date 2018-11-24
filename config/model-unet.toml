@@ -11,9 +11,6 @@
   # Image side size in pixels.
   image_size = 512
 
-  # Directory where to save checkpoints to during training.
-  checkpoint = '/tmp/pth/'
-
 
 # Model specific optimization parameters.
 [opt]
@@ -32,3 +29,6 @@
 
   # Data augmentation, Flip or Rotate probability
   data_augmentation = 0.75
+
+  # Use ImageNet weights pretraining
+  pretrained = true
