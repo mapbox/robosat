@@ -28,8 +28,8 @@ def add_parser(subparser):
     parser.add_argument("--mode", type=str, default="side", help="compare mode (e.g side, diff or list)")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, (for diff and list modes)")
     parser.add_argument("--leaflet", type=str, help="leaflet client base url")
-    parser.add_argument("--minimum_fg", type=float, default=0.0, help="skip if foreground ratio below, [0-100]")
-    parser.add_argument("--minimum_qod", type=float, default=0.0, help="redshift tile if QoD below, [0-100]")
+    parser.add_argument("--minimum_fg", type=float, default=0.0, help="skip tile if foreground ratio below, [0-100]")
+    parser.add_argument("--minimum_qod", type=float, default=0.0, help="select tile if QoD below, [0-100]")
 
     parser.set_defaults(func=main)
 

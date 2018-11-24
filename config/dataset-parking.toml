@@ -12,7 +12,7 @@
   classes = ['background', 'parking']
 
   # Color map for visualization and representing classes in masks.
-  # Note: available colors can be found in `robosat/colors.py`
+  # Note: available colors are either CSS3 colors names or #RRGGBB hexadecimal representation.
   colors  = ['denim', 'orange']
 
 
