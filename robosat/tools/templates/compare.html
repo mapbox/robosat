@@ -18,7 +18,7 @@ class XYZ
   get()     { var p = this.fts[this.i]["properties"]; return { x: p.x, y: p.y, z: p.z } }
   next()    { if ((1 + this.i - this.fts.length) <= 0) this.i++ ; return this.get(this.i) }
   prev()    { if ((this.i - 1) >= 0) this.i-- ; return this.get(this.i) }
-  ping()    { this.sel[this.i] = this.sel[this.i] ? false : this.path() }
+  ping()    { this.sel[this.i] = this.sel[this.i] ? false : this.cover() }
   is_sel()  { return this.sel[this.i] }
   get_sel() { var sel = ""; for (var i in this.sel) { if (this.sel[i]) { sel += this.sel[i] + " \n" } } return sel }
   path()    { var xyz = this.get(); return xyz.z + "/" + xyz.x + "/" + xyz.y }
