@@ -11,8 +11,10 @@ See: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 import csv
 import io
 import os
+from glob import glob
 
 import cv2
+from PIL import Image
 import numpy as np
 
 from rasterio.warp import transform
@@ -140,6 +142,19 @@ def tiles_from_csv(path):
             yield mercantile.Tile(*map(int, row))
 
 
+def tile_image(root, x, y, z):
+    """Retrieves H,W,C numpy array, from a tile store and X,Y,Z coordinates, or `None`"""
+
+    try:
+        path = glob(os.path.join(root, z, x, y) + "*")
+        assert len(path) == 1
+        img = np.array(Image.open(path[0]).convert("RGB"))
+    except:
+        return None
+
+    return img
+
+
 def adjacent_tile_image(tile, dx, dy, tiles):
     """Retrieves an adjacent tile image from a tile store.
 
@@ -161,7 +176,6 @@ def adjacent_tile_image(tile, dx, dy, tiles):
     except KeyError:
         return None
 
-    assert path[-5:] == ".webp"  # OpenCV AFAIK not handling PNG Palette
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
 
@@ -175,7 +189,7 @@ def buffer_tile_image(tile, tiles, overlap, tile_size):
       tile_size: the tile size.
 
     Returns:
-      The composite image containing the original tile plus tile overlap on all sides.
+      The H,W,C numpy composite image containing the original tile plus tile overlap on all sides.
       It's size is `tile_size` + 2 * `overlap` pixel for each side.
     """
 
