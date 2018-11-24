@@ -43,6 +43,7 @@ def add_parser(subparser):
         "train", help="trains model on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    parser.add_argument("out", type=str, help="directory to save checkpoint .pth files and log")
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
@@ -55,15 +56,8 @@ def add_parser(subparser):
 def main(args):
     model = load_config(args.model)
     dataset = load_config(args.dataset)
-    output_dir = model["common"]["checkpoint"]
 
-    if not args.resume:
-        try:
-            os.makedirs(output_dir)
-        except:
-            sys.exit("Can't create {} output dir, maybe because it's already exists ?".format(output_dir))
-
-    log = Log(os.path.join(output_dir, "log"))
+    log = Log(os.path.join(args.out, "log"))
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -143,6 +137,7 @@ def main(args):
     log.log("")
 
     for epoch in range(resume, num_epochs):
+
         log.log("---")
         log.log("Epoch: {}/{}".format(epoch + 1, num_epochs))
 
@@ -169,13 +164,12 @@ def main(args):
 
         for k, v in val_hist.items():
             history["val " + k].append(v)
+        visual_path = os.path.join(args.out, "history-{:05d}-of-{:05d}.png".format(epoch + 1, num_epochs))
+        plot(visual_path, history)
 
-        visual = "history-{:05d}-of-{:05d}.png".format(epoch + 1, num_epochs)
-        plot(os.path.join(output_dir, visual), history)
-
-        checkpoint = "checkpoint-{:05d}-of-{:05d}.pth".format(epoch + 1, num_epochs)
         states = {"epoch": epoch + 1, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict()}
-        torch.save(states, os.path.join(output_dir, checkpoint))
+        checkpoint_path = os.path.join(args.out, "checkpoint-{:05d}-of-{:05d}.pth".format(epoch + 1, num_epochs))
+        torch.save(states, checkpoint_path)
 
 
 def train(loader, num_classes, device, net, optimizer, criterion):
