@@ -28,8 +28,8 @@ def add_parser(subparser):
         "rasterize", help="rasterize features to label masks", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("features", type=str, help="path to GeoJSON features file")
-    parser.add_argument("tiles", type=str, help="path to .csv tiles file")
+    parser.add_argument("features", type=str, nargs="+", help="path to GeoJSON features file")
+    parser.add_argument("cover", type=str, help="path to csv tiles cover file")
     parser.add_argument("out", type=str, help="directory to write converted images")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
@@ -88,10 +88,7 @@ def main(args):
     os.makedirs(args.out, exist_ok=True)
 
     # We can only rasterize all tiles at a single zoom.
-    assert all(tile.z == args.zoom for tile in tiles_from_csv(args.tiles))
-
-    with open(args.features) as f:
-        fc = json.load(f)
+    assert all(tile.z == args.zoom for tile in tiles_from_csv(args.cover))
 
     # Find all tiles the features cover and make a map object for quick lookup.
     feature_map = collections.defaultdict(list)
@@ -124,29 +121,31 @@ def main(args):
 
         return feature_map
 
-    for i, feature in enumerate(tqdm(fc["features"], ascii=True, unit="feature")):
 
-        if feature["geometry"]["type"] == "GeometryCollection":
-            for geometry in feature["geometry"]["geometries"]:
-                feature_map = parse_geometry(feature_map, geometry, i)
-        else:
-            feature_map = parse_geometry(feature_map, feature["geometry"], i)
+    for feature in args.features:
+        with open(feature) as f:
+            fc = json.load(f)
+            for i, feature in enumerate(tqdm(fc["features"], ascii=True, unit="feature")):
+
+                if feature["geometry"]["type"] == "GeometryCollection":
+                    for geometry in feature["geometry"]["geometries"]:
+                        feature_map = parse_geometry(feature_map, geometry, i)
+                else:
+                    feature_map = parse_geometry(feature_map, feature["geometry"], i)
 
     # Burn features to tiles and write to a slippy map directory.
-    for tile in tqdm(list(tiles_from_csv(args.tiles)), ascii=True, unit="tile"):
+    for tile in tqdm(list(tiles_from_csv(args.cover)), ascii=True, unit="tile"):
         if tile in feature_map:
             out = burn(tile, feature_map[tile], args.size)
         else:
             out = Image.fromarray(np.zeros(shape=(args.size, args.size)).astype(int), mode="P")
 
-        palette = complementary_palette(make_palette(colors[0], colors[1]))
-        out.putpalette(palette)
-
         out_path = os.path.join(args.out, str(tile.z), str(tile.x))
         os.makedirs(out_path, exist_ok=True)
 
+        out.putpalette(complementary_palette(make_palette(colors[0], colors[1])))
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
 
     if args.web_ui:
-        tiles = [tile for tile in tiles_from_csv(args.tiles)]
+        tiles = [tile for tile in tiles_from_csv(args.cover)]
         web_ui(args.out, args.web_ui, tiles, tiles, "png", "leaflet.html")
