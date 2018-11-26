@@ -1,19 +1,14 @@
+import os
+import sys
 import argparse
-
-import numpy as np
-
-from PIL import Image
 from tqdm import tqdm
-
-from robosat.tiles import tiles_from_slippy_map
+import numpy as np
+from PIL import Image
+import pkgutil
+from pathlib import Path
+from importlib import import_module
 from robosat.config import load_config
-
-from robosat.features.parking import ParkingHandler
-
-
-# Register post-processing handlers here; they need to support a `apply(tile, mask)` function
-# for handling one mask and a `save(path)` function for GeoJSON serialization to a file.
-handlers = {"parking": ParkingHandler}
+from robosat.tiles import tiles_from_slippy_map
 
 
 def add_parser(subparser):
@@ -23,9 +18,9 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("masks", type=str, help="slippy map directory with segmentation masks")
-    parser.add_argument("--type", type=str, required=True, choices=handlers.keys(), help="type of feature to extract")
+    parser.add_argument("--type", type=str, required=True, help="type of feature to extract")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("masks", type=str, help="slippy map directory with segmentation masks")
     parser.add_argument("out", type=str, help="path to GeoJSON file to store features in")
 
     parser.set_defaults(func=main)
@@ -34,18 +29,25 @@ def add_parser(subparser):
 def main(args):
     dataset = load_config(args.dataset)
 
+    module_path_search = [os.path.join(Path(__file__).parent.parent, "features")]
+    modules = [name for _, name, _ in pkgutil.iter_modules(module_path_search) if name != "core"]
+    if args.type not in modules:
+        sys.exit("Unknown type, thoses available are {}".format(modules))
+
     labels = dataset["common"]["classes"]
-    assert set(labels).issuperset(set(handlers.keys())), "handlers have a class label"
+    if args.type not in labels:
+        sys.exit("The type you asked is not consistent with yours classes in the dataset file provided.")
     index = labels.index(args.type)
 
-    handler = handlers[args.type]()
+    try:
+        module = import_module("robosat.features." + args.type, package=__name__)
+        handler = getattr(module, "{}Handler".format(args.type.title()))
+    except:
+        sys.exit("Something get wrong, unable to call {}Handler", args.type.title())
 
-    tiles = list(tiles_from_slippy_map(args.masks))
-
-    for tile, path in tqdm(tiles, ascii=True, unit="mask"):
+    for tile, path in tqdm(list(tiles_from_slippy_map(args.masks)), ascii=True, unit="mask"):
         image = np.array(Image.open(path).convert("P"), dtype=np.uint8)
         mask = (image == index).astype(np.uint8)
+        handler().apply(tile, mask)
 
-        handler.apply(tile, mask)
-
-    handler.save(args.out)
+    handler().save(args.out)
