@@ -30,22 +30,24 @@ class TestSlippyMapTiles(unittest.TestCase):
 
 class TestSlippyMapTilesConcatenation(unittest.TestCase):
     def test_len(self):
-        inputs = ["tests/fixtures/images/"]
+        path   = "tests/fixtures"
         target = "tests/fixtures/labels/"
+        channels = [{"sub": "images", "bands": [1, 2, 3]}]
 
         transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
-        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
+        dataset = SlippyMapTilesConcatenation(path, channels, target, transform)
 
         self.assertEqual(len(dataset), 3)
 
     def test_getitem(self):
-        inputs = ["tests/fixtures/images/"]
+        path   = "tests/fixtures"
         target = "tests/fixtures/labels/"
+        channels = [{"sub": "images", "bands": [1, 2, 3]}]
 
         transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
-        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
+        dataset = SlippyMapTilesConcatenation(path, channels, target, transform)
 
         images, mask, tiles = dataset[0]
-        self.assertEqual(tiles[0], mercantile.Tile(69105, 105093, 18))
+        self.assertEqual(tiles, mercantile.Tile(69105, 105093, 18))
         self.assertEqual(type(images), torch.Tensor)
         self.assertEqual(type(mask), torch.Tensor)
