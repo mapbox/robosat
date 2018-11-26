@@ -44,7 +44,8 @@ def main(args):
         try:
             extension = os.path.splitext(src)[1][1:]
             dst = os.path.join(args.out, str(tile.z), str(tile.x), "{}.{}".format(tile.y, extension))
-            os.makedirs(os.path.join(args.out, str(tile.z), str(tile.x)), exist_ok=True)
+            if not os.path.isdir(os.path.join(args.out, str(tile.z), str(tile.x))):
+                os.makedirs(os.path.join(args.out, str(tile.z), str(tile.x)), exist_ok=True)
             if args.move:
                 assert(os.path.isfile(src))
                 shutil.move(src, dst)
