@@ -15,8 +15,8 @@ def add_parser(subparser):
         "merge", help="merged adjacent GeoJSON features", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("features", type=str, help="GeoJSON file to read features from")
     parser.add_argument("--threshold", type=int, required=True, help="minimum distance to adjacent features, in m")
+    parser.add_argument("features", type=str, help="GeoJSON file to read features from")
     parser.add_argument("out", type=str, help="path to GeoJSON to save merged features to")
 
     parser.set_defaults(func=main)

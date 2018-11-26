@@ -34,11 +34,12 @@ def add_parser(subparser):
     parser.add_argument("--overlap", type=int, default=32, help="tile pixel overlap to predict on")
     parser.add_argument("--tile_size", type=int, required=True, help="tile size for slippy map tiles")
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
-    parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
-    parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
+    parser.add_argument("tiles", type=str, help="directory to read slippy map image tiles from")
+    parser.add_argument("probs", type=str, help="directory to save slippy map probability masks to")
 
     parser.set_defaults(func=main)
 
@@ -109,5 +110,6 @@ def main(args):
                 out.save(path, optimize=True)
 
     if args.web_ui:
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
         tiles = [tile for tile, _ in tiles_from_slippy_map(args.tiles)]
-        web_ui(args.probs, args.web_ui, tiles, tiles, "png", "leaflet.html")
+        web_ui(args.probs, args.web_ui, tiles, tiles, "png", template)

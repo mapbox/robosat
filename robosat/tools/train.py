@@ -43,12 +43,12 @@ def add_parser(subparser):
         "train", help="trains model on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("out", type=str, help="directory to save checkpoint .pth files and log")
     parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
     parser.add_argument("--resume", action="store_true", help="resume training (imply to provide a checkpoint)")
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
+    parser.add_argument("out", type=str, help="directory to save checkpoint .pth files and log")
 
     parser.set_defaults(func=main)
 

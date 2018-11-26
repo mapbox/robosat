@@ -1,7 +1,9 @@
 import re
 import os
+import sys
 import json
 import matplotlib
+from pathlib import Path
 from mercantile import feature
 from robosat.tiles import pixel_to_location
 
@@ -30,7 +32,10 @@ def plot(out, history):
 def web_ui(out, base_url, coverage_tiles, selected_tiles, ext, template):
 
     try:
-        web_ui = open(os.path.join("./robosat/tools/templates/" + template), "r").read()
+        if os.path.isfile(template):
+            web_ui = open(template, "r").read()
+        else:
+            web_ui = open(os.path.join(Path(__file__).parent, "tools", "templates", template), "r").read()
     except:
         sys.exit("Unable to open Web UI template {}".format(template))
 

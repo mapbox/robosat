@@ -25,14 +25,15 @@ def add_parser(subparser):
         "tile", help="tile a raster image or label", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("raster", type=str, help="path to the raster to tile")
-    parser.add_argument("out", type=str, help="directory to write tiles")
     parser.add_argument("--size", type=int, default=512, help="size of tiles side in pixels")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, choices=["image", "label"], default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
     parser.add_argument("--no_data", type=int, help="color considered as no data [0-255]. Skip related tile")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
+    parser.add_argument("raster", type=str, help="path to the raster to tile")
+    parser.add_argument("out", type=str, help="directory to write tiles")
 
     parser.set_defaults(func=main)
 
@@ -116,5 +117,6 @@ def main(args):
                 Image.fromarray(np.moveaxis(data, 0, 2), mode="RGB").save("{}.{}".format(path, ext), optimize=True)
 
     if args.web_ui:
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
         tiles = [tile for tile in tiles if tile not in tiles_nodata]
-        web_ui(args.out, args.web_ui, tiles, tiles, ext, "leaflet.html")
+        web_ui(args.out, args.web_ui, tiles, tiles, ext, template)

@@ -27,6 +27,7 @@ def add_parser(subparser):
     parser.add_argument("--type", type=str, default="XYZ", choices=["XYZ", "WMS", "TMS"], help="service type to use")
     parser.add_argument("--timeout", type=int, default=10, help="server request timeout (in seconds)")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
     parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
 
@@ -107,4 +108,5 @@ def main(args):
         log.log(" Coverage is fully downloaded.")
 
     if args.web_ui:
-        web_ui(args.out, args.web_ui, tiles, tiles, args.ext, "leaflet.html")
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
+        web_ui(args.out, args.web_ui, tiles, tiles, args.ext, template)

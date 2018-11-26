@@ -19,11 +19,12 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("masks", type=str, help="slippy map directory to save masks to")
-    parser.add_argument("probs", type=str, nargs="+", help="slippy map directories with class probabilities")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--weights", type=float, nargs="+", help="weights for weighted average soft-voting")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
+    parser.add_argument("masks", type=str, help="slippy map directory to save masks to")
+    parser.add_argument("probs", type=str, nargs="+", help="slippy map directories with class probabilities")
 
     parser.set_defaults(func=main)
 
@@ -74,8 +75,9 @@ def main(args):
         out.save(path, optimize=True)
 
     if args.web_ui:
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
         tiles = [tile for tile, _ in list(tiles_from_slippy_map(args.probs[0]))]
-        web_ui(args.masks, args.web_ui, tiles, tiles, "png", "leaflet.html")
+        web_ui(args.masks, args.web_ui, tiles, tiles, "png", template)
 
 
 def softvote(probs, axis=0, weights=None):

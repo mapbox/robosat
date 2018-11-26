@@ -17,11 +17,12 @@ def add_parser(subparser):
         help="filter images in a slippy map directory using a csv",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--web_ui", type=str, help="web ui base url")
-    parser.add_argument("--move", action="store_true", help="move files from src to dst (rather than copy them)" )
     parser.add_argument("dir", type=str, help="directory to read slippy map tiles from for filtering")
     parser.add_argument("cover", type=str, help="csv cover to filter tiles by")
     parser.add_argument("out", type=str, help="directory to save filtered tiles to")
+    parser.add_argument("--move", action="store_true", help="move files from src to dst (rather than copy them)" )
+    parser.add_argument("--web_ui", type=str, help="web ui base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
 
     parser.set_defaults(func=main)
 
@@ -53,4 +54,5 @@ def main(args):
             sys.exit("Error: Unable to process {}".format(tile))
 
     if args.web_ui:
-        web_ui(args.out, args.web_ui, tiles, tiles, extension, "leaflet.html")
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
+        web_ui(args.out, args.web_ui, tiles, tiles, extension, template)

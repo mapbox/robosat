@@ -28,13 +28,14 @@ def add_parser(subparser):
         "rasterize", help="rasterize features to label masks", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("features", type=str, nargs="+", help="path to GeoJSON features file")
-    parser.add_argument("cover", type=str, help="path to csv tiles cover file")
-    parser.add_argument("out", type=str, help="directory to write converted images")
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--size", type=int, default=512, help="size of rasterized image tiles in pixels")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
+    parser.add_argument("features", type=str, nargs="+", help="path to GeoJSON features file")
+    parser.add_argument("cover", type=str, help="path to csv tiles cover file")
+    parser.add_argument("out", type=str, help="directory to write converted images")
 
     parser.set_defaults(func=main)
 
@@ -147,5 +148,6 @@ def main(args):
         out.save(os.path.join(out_path, "{}.png".format(tile.y)), optimize=True)
 
     if args.web_ui:
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
         tiles = [tile for tile in tiles_from_csv(args.cover)]
-        web_ui(args.out, args.web_ui, tiles, tiles, "png", "leaflet.html")
+        web_ui(args.out, args.web_ui, tiles, tiles, "png", template)
