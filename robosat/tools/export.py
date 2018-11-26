@@ -17,7 +17,7 @@ def add_parser(subparser):
 
     parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
     parser.add_argument("--export_channels", type=int, help="export channels to use (keep the first ones)")
-    parser.add_argument("--type", type=str, default="onnx", help="output type, i.e onnx or pth")
+    parser.add_argument("--type", type=str, choices=["onnx", "pth"], default="onnx", help="output type")
     parser.add_argument("--image_size", type=int, default=512, help="image size to use for model")
     parser.add_argument("--checkpoint", type=str, required=True, help="model checkpoint to load")
     parser.add_argument("out", type=str, help="path to save export model to")

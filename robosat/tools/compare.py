@@ -23,7 +23,7 @@ def add_parser(subparser):
     parser = subparser.add_parser(
         "compare", help="compare images and/or labels and masks", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--mode", type=str, default="side", help="compare mode (e.g side, stack or list)")
+    parser.add_argument("--mode", type=str, default="side", choices=["side", "stack", "list"], help="compare mode")
     parser.add_argument("--images", type=str, nargs="+", help="slippy map images dirs to render (stack or side mode)")
     parser.add_argument("--ext", type=str, default="webp", help="file format to save images in (stack or side mode)")
     parser.add_argument("--labels", type=str, help="directory to read slippy map labels from (needed for QoD metric)")
@@ -149,9 +149,6 @@ def main(args):
                 first = False
             else:
                 out.write("{},{},{}\t\t{:.1f}\t\t{:.1f}{}".format(x, y, z, fg_ratio, qod, os.linesep))
-
-        else:
-            sys.exit("Unkown mode, should be either: side, stack or list")
 
     if args.mode == "list":
         if args.geojson:

@@ -24,7 +24,7 @@ def add_parser(subparser):
     )
     parser.add_argument("--ext", type=str, default="webp", help="file format to save images in")
     parser.add_argument("--rate", type=int, default=10, help="rate limit in max. requests per second")
-    parser.add_argument("--type", type=str, default="XYZ", help="service type to use (e.g: XYZ, WMS or TMS)")
+    parser.add_argument("--type", type=str, default="XYZ", choices=["XYZ", "WMS", "TMS"], help="service type to use")
     parser.add_argument("--timeout", type=int, default=10, help="server request timeout (in seconds)")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
@@ -70,8 +70,6 @@ def main(args):
                 elif args.type == "WMS":
                     xmin, ymin, xmax, ymax = xy_bounds(tile)
                     url = args.url.format(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
-                else:
-                    return tile, None, False
 
                 res = fetch_image(session, url, args.timeout)
                 if not res:

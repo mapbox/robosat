@@ -29,7 +29,7 @@ def add_parser(subparser):
     parser.add_argument("out", type=str, help="directory to write tiles")
     parser.add_argument("--size", type=int, default=512, help="size of tiles side in pixels")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
-    parser.add_argument("--type", type=str, default="image", help="image or label tiling")
+    parser.add_argument("--type", type=str, choices=["image", "label"], default="image", help="image or label tiling")
     parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
     parser.add_argument("--no_data", type=int, help="color considered as no data [0-255]. Skip related tile")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
@@ -114,9 +114,6 @@ def main(args):
             elif C == 3:
                 ext = "webp"
                 Image.fromarray(np.moveaxis(data, 0, 2), mode="RGB").save("{}.{}".format(path, ext), optimize=True)
-
-        else:
-            sys.exit("Error: Unknown type, should be either 'image' or 'label'")
 
     if args.web_ui:
         tiles = [tile for tile in tiles if tile not in tiles_nodata]
