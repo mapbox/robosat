@@ -10,7 +10,7 @@ class Log:
     """Create a log instance on a log file
     """
 
-    def __init__(self, path, out=None):
+    def __init__(self, path, out=sys.stdout):
 
         self.fp = None
         self.out = out
