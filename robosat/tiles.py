@@ -87,6 +87,7 @@ def tiles_from_slippy_map(root):
         except ValueError:
             return False
 
+    root = os.path.expanduser(root)
     for z in os.listdir(root):
         if not isdigit(z):
             continue
@@ -116,6 +117,7 @@ def tiles_from_csv(path):
       The mercantile tiles from the csv file.
     """
 
+    path = os.path.expanduser(path)
     with open(path) as fp:
         reader = csv.reader(fp)
 
@@ -130,6 +132,7 @@ def tile_image(root, x, y, z):
     """Retrieves H,W,C numpy array, from a tile store and X,Y,Z coordinates, or `None`"""
 
     try:
+        root = os.path.expanduser(root)
         path = glob(os.path.join(root, z, x, y) + "*")
         assert len(path) == 1
         img = np.array(Image.open(path[0]).convert("RGB"))
