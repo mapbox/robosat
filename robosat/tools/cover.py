@@ -2,6 +2,7 @@ import argparse
 import csv
 import json
 import sys
+import os
 
 from supermercado import burntiles
 from mercantile import tiles
@@ -51,6 +52,9 @@ def main(args):
 
     else:
         sys.exit("You have to provide either a GeoJson features file, or a lat/lon bbox, or an input directory path")
+
+    if not os.path.isdir(os.path.dirname(args.out)):
+        os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     with open(args.out, "w") as fp:
         writer = csv.writer(fp)
