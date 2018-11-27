@@ -29,7 +29,6 @@ pyproj==1.9.5.1
 pytest==3.9.1
 python-dateutil==2.7.3
 rasterio==1.0.10
-rasterio==1.0.8
 requests==2.20.0
 Rtree==0.8.3
 scikit-learn==0.20.0
