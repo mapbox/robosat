@@ -122,7 +122,6 @@ def main(args):
 
         return feature_map
 
-
     for feature in args.features:
         with open(feature) as f:
             fc = json.load(f)

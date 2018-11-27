@@ -63,4 +63,3 @@ def web_ui(out, base_url, coverage_tiles, selected_tiles, ext, template):
                 fp.write('{}{{"type":"Feature",{},{}}}'.format("," if not first else "", geom, prop))
                 first = False
             fp.write("]}")
-

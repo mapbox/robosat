@@ -20,7 +20,7 @@ def add_parser(subparser):
     parser.add_argument("dir", type=str, help="directory to read slippy map tiles from for filtering")
     parser.add_argument("cover", type=str, help="csv cover to filter tiles by")
     parser.add_argument("out", type=str, help="directory to save filtered tiles to")
-    parser.add_argument("--move", action="store_true", help="move files from src to dst (rather than copy them)" )
+    parser.add_argument("--move", action="store_true", help="move files from src to dst (rather than copy them)")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
     parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
 
@@ -47,7 +47,7 @@ def main(args):
             if not os.path.isdir(os.path.join(args.out, str(tile.z), str(tile.x))):
                 os.makedirs(os.path.join(args.out, str(tile.z), str(tile.x)), exist_ok=True)
             if args.move:
-                assert(os.path.isfile(src))
+                assert os.path.isfile(src)
                 shutil.move(src, dst)
             else:
                 shutil.copyfile(src, dst)
