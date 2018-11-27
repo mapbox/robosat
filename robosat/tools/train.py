@@ -61,6 +61,7 @@ def main(args):
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
+      
         torch.backends.cudnn.benchmark = True
         log.log("RoboSat - training on {} GPUs, with {} workers".format(torch.cuda.device_count(), args.workers))
     else:

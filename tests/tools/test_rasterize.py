@@ -4,6 +4,8 @@ import unittest
 import numpy as np
 import mercantile
 
+from PIL import Image
+
 from robosat.tools.rasterize import burn, feature_to_mercator
 
 
@@ -23,6 +25,7 @@ class TestBurn(unittest.TestCase):
         tile = mercantile.Tile(70762, 104119, 18)
 
         rasterized = burn(tile, parking_fc["features"], 512)
+        rasterized = Image.fromarray(rasterized, mode="P")
 
         # rasterized.save('rasterized.png')
 
@@ -38,6 +41,7 @@ class TestBurn(unittest.TestCase):
         tile = mercantile.Tile(69623, 104946, 18)
 
         rasterized = burn(tile, parking_fc["features"], 512)
+        rasterized = Image.fromarray(rasterized, mode="P")
 
         self.assertEqual(rasterized.size, (512, 512))
 
