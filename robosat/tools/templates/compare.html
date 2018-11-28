@@ -37,13 +37,18 @@ function display_img(xyz)
   if (xyz.is_sel()) { document.getElementById("image").style.border = "2px solid #cc0099" }
                else { document.getElementById("image").style.border = "2px solid #ffffff" }
 }
+
+var msg_sel = `
+Copy selected tiles to clipboard: Ctrl+C, Enter.
+HINT: If any issue with your browser, use instead, from JS console: console.log(xyz.get_sel())`
+
 load_json("{{tiles}}", function(json)
   { xyz = new XYZ(json); document.addEventListener("keydown", (e) =>
     {
       if (e.key == "ArrowRight")     { xyz.next() ; display_img(xyz) }
       if (e.key == "ArrowLeft")      { xyz.prev() ; display_img(xyz) }
       if (e.key == " " /* Space */ ) { xyz.ping() ; display_img(xyz) }
-      if (e.key == "Escape" )        { window.prompt("Copy selected tiles to clipboard: Ctrl+C, Enter", xyz.get_sel()) }
+      if (e.key == "Escape" )        { window.prompt(msg_sel, xyz.get_sel()) }
     })
   }
 )
