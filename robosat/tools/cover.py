@@ -1,12 +1,12 @@
+import os
+import sys
 import argparse
 import csv
 import json
-import sys
-import os
 
-from supermercado import burntiles
-from mercantile import tiles
 from tqdm import tqdm
+from mercantile import tiles
+from supermercado import burntiles
 
 from robosat.datasets import tiles_from_slippy_map
 
@@ -14,15 +14,15 @@ from robosat.datasets import tiles_from_slippy_map
 def add_parser(subparser):
     parser = subparser.add_parser(
         "cover",
-        help="generates tiles covering GeoJSON features or lat/lon Bbox",
+        help="generates tiles covering, in csv format: X,Y,Z",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument("--zoom", type=int, help="zoom level of tiles")
     parser.add_argument("--type", type=str, default="geojson", choices=["geojson", "bbox", "dir"], help="input type")
-    help = "input value, upon type either: a geojson file path, a bbox in lat/lon ESPG:4326, or a slippymap dir path"
+    help = "input value, upon type either: a geojson file path, a lat/lon bbox in ESPG:4326, or a slippymap dir path"
     parser.add_argument("input", type=str, help=help)
-    parser.add_argument("out", type=str, help="path to csv file to store tiles in")
+    parser.add_argument("out", type=str, help="path to csv file to generate")
 
     parser.set_defaults(func=main)
 
@@ -50,12 +50,8 @@ def main(args):
     elif args.type == "dir":
         cover = [tile for tile, _ in tiles_from_slippy_map(args.input)]
 
-    else:
-        sys.exit("You have to provide either a GeoJson features file, or a lat/lon bbox, or an input directory path")
-
     if not os.path.isdir(os.path.dirname(args.out)):
         os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     with open(args.out, "w") as fp:
-        writer = csv.writer(fp)
-        writer.writerows(cover)
+        csv.writer(fp).writerows(cover)
