@@ -18,19 +18,17 @@ def add_parser(subparser):
         "weights", help="computes class weights on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    dataset = load_config(args.dataset)
-
-    path = dataset["common"]["dataset"]
-    num_classes = len(dataset["common"]["classes"])
+    config = load_config(args.config)
+    path = config["dataset"]["path"]
+    num_classes = len(config["classes"]["titles"])
 
     train_transform = Compose([MaskToTensor()])
-
     train_dataset = SlippyMapTiles(os.path.join(path, "training", "labels"), "mask", transform=train_transform)
 
     n = 0

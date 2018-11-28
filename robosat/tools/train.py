@@ -43,11 +43,11 @@ def add_parser(subparser):
         "train", help="trains model on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--model", type=str, required=True, help="path to model configuration file")
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
     parser.add_argument("--resume", action="store_true", help="resume training (imply to provide a checkpoint)")
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
+    parser.add_argument("--dataset", type=int, help="if set, override dataset path value from config file")
     parser.add_argument("--epochs", type=int, help="if set, override epochs value from config file")
     parser.add_argument("--lr", type=float, help="if set, override learning rate value from config file")
     parser.add_argument("out", type=str, help="directory to save checkpoint .pth files and log")
@@ -56,35 +56,36 @@ def add_parser(subparser):
 
 
 def main(args):
-    model = load_config(args.model)
-    dataset = load_config(args.dataset)
+    config = load_config(args.config)
+    lr = args.lr if args.lr else config["model"]["lr"]
+    dataset_path = args.dataset if args.dataset else config["dataset"]["path"]
+    num_epochs = args.epochs if args.epochs else config["model"]["epochs"]
 
     log = Log(os.path.join(args.out, "log"))
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
-      
+
         torch.backends.cudnn.benchmark = True
         log.log("RoboSat - training on {} GPUs, with {} workers".format(torch.cuda.device_count(), args.workers))
     else:
         device = torch.device("cpu")
         log.log("RoboSat - training on CPU, with {} workers", format(args.workers))
 
-    num_classes = len(dataset["common"]["classes"])
+    num_classes = len(config["classes"]["titles"])
     num_channels = 0
-    for channel in dataset["channels"]:
+    for channel in config["channels"]:
         num_channels += len(channel["bands"])
-    pretrained = model["opt"]["pretrained"]
+    pretrained = config["model"]["pretrained"]
     net = DataParallel(UNet(num_classes, num_channels=num_channels, pretrained=pretrained)).to(device)
 
-    if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
+    if config["model"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
         try:
-            weight = torch.Tensor(dataset["weights"]["values"])
+            weight = torch.Tensor(config["classes"]["weights"])
         except KeyError:
             sys.exit("Error: The loss function used, need dataset weights values")
 
-    lr = args.lr if args.lr else model["opt"]["lr"]
-    optimizer = Adam(net.parameters(), lr=lr, weight_decay=model["opt"]["decay"])
+    optimizer = Adam(net.parameters(), lr=lr, weight_decay=config["model"]["decay"])
 
     resume = 0
     if args.checkpoint:
@@ -101,43 +102,42 @@ def main(args):
             optimizer.load_state_dict(chkpt["optimizer"])
             resume = chkpt["epoch"]
 
-    if model["opt"]["loss"] == "CrossEntropy":
+    if config["model"]["loss"] == "CrossEntropy":
         criterion = CrossEntropyLoss2d(weight=weight).to(device)
-    elif model["opt"]["loss"] == "mIoU":
+    elif config["model"]["loss"] == "mIoU":
         criterion = mIoULoss2d(weight=weight).to(device)
-    elif model["opt"]["loss"] == "Focal":
+    elif config["model"]["loss"] == "Focal":
         criterion = FocalLoss2d(weight=weight).to(device)
-    elif model["opt"]["loss"] == "Lovasz":
+    elif config["model"]["loss"] == "Lovasz":
         criterion = LovaszLoss2d().to(device)
     else:
-        sys.exit("Error: Unknown [opt][loss] value !")
+        sys.exit("Error: Unknown [model][loss] value !")
 
-    train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
+    train_loader, val_loader = get_dataset_loaders(dataset_path, config, args.workers)
 
-    num_epochs = args.epochs if args.epochs else model["opt"]["epochs"]
     if resume >= num_epochs:
-        sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
+        sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.config))
 
     history = collections.defaultdict(list)
 
     log.log("")
-    log.log("--- Input tensor from Dataset: {} ---".format(dataset["common"]["dataset"]))
+    log.log("--- Input tensor from Dataset: {} ---".format(dataset_path))
     num_channel = 1
-    for channel in dataset["channels"]:
+    for channel in config["channels"]:
         for band in channel["bands"]:
             log.log("Channel {}:\t\t {}[band: {}]".format(num_channel, channel["sub"], band))
             num_channel += 1
     log.log("")
     log.log("--- Hyper Parameters ---")
-    log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
-    log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
-    log.log("Data Augmentation:\t {}".format(model["opt"]["data_augmentation"]))
+    log.log("Batch Size:\t\t {}".format(config["model"]["batch_size"]))
+    log.log("Image Size:\t\t {}".format(config["model"]["image_size"]))
+    log.log("Data Augmentation:\t {}".format(config["model"]["data_augmentation"]))
     log.log("Learning Rate:\t\t {}".format(lr))
-    log.log("Weight Decay:\t\t {}".format(model["opt"]["decay"]))
-    log.log("Loss function:\t\t {}".format(model["opt"]["loss"]))
-    log.log("ResNet pre-trained:\t {}".format(model["opt"]["pretrained"]))
+    log.log("Weight Decay:\t\t {}".format(config["model"]["decay"]))
+    log.log("Loss function:\t\t {}".format(config["model"]["loss"]))
+    log.log("ResNet pre-trained:\t {}".format(config["model"]["pretrained"]))
     if "weight" in locals():
-        log.log("Weights :\t\t {}".format(dataset["weights"]["values"]))
+        log.log("Weights :\t\t {}".format(config["dataset"]["weights"]))
     log.log("")
 
     for epoch in range(resume, num_epochs):
@@ -150,7 +150,7 @@ def main(args):
             "Train    loss: {:.4f}, mIoU: {:.3f}, {} IoU: {:.3f}, MCC: {:.3f}".format(
                 train_hist["loss"],
                 train_hist["miou"],
-                dataset["common"]["classes"][1],
+                config["classes"]["titles"][1],
                 train_hist["fg_iou"],
                 train_hist["mcc"],
             )
@@ -162,7 +162,7 @@ def main(args):
         val_hist = validate(val_loader, num_classes, device, net, criterion)
         log.log(
             "Validate loss: {:.4f}, mIoU: {:.3f}, {} IoU: {:.3f}, MCC: {:.3f}".format(
-                val_hist["loss"], val_hist["miou"], dataset["common"]["classes"][1], val_hist["fg_iou"], val_hist["mcc"]
+                val_hist["loss"], val_hist["miou"], config["classes"]["titles"][1], val_hist["fg_iou"], val_hist["mcc"]
             )
         )
 
@@ -258,35 +258,35 @@ def validate(loader, num_classes, device, net, criterion):
     }
 
 
-def get_dataset_loaders(model, dataset, workers):
+def get_dataset_loaders(path, config, workers):
 
     # Values computed on ImageNet DataSet
     mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
     transform = JointCompose(
         [
-            JointResize(model["common"]["image_size"]),
-            JointRandomFlipOrRotate(model["opt"]["data_augmentation"]),
+            JointResize(config["model"]["image_size"]),
+            JointRandomFlipOrRotate(config["model"]["data_augmentation"]),
             JointTransform(ImageToTensor(), MaskToTensor()),
             JointTransform(Normalize(mean=mean, std=std), None),
         ]
     )
 
     train_dataset = SlippyMapTilesConcatenation(
-        os.path.join(dataset["common"]["dataset"], "training"),
-        dataset["channels"],
-        os.path.join(dataset["common"]["dataset"], "training", "labels"),
+        os.path.join(path, "training"),
+        config["channels"],
+        os.path.join(path, "training", "labels"),
         joint_transform=transform,
     )
 
     val_dataset = SlippyMapTilesConcatenation(
-        os.path.join(dataset["common"]["dataset"], "validation"),
-        dataset["channels"],
-        os.path.join(dataset["common"]["dataset"], "validation", "labels"),
+        os.path.join(path, "validation"),
+        config["channels"],
+        os.path.join(path, "validation", "labels"),
         joint_transform=transform,
     )
 
-    batch_size = model["common"]["batch_size"]
+    batch_size = config["model"]["batch_size"]
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=workers)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=workers)
 

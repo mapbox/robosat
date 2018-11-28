@@ -15,7 +15,7 @@ def add_parser(subparser):
         "export", help="exports or prunes model", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--export_channels", type=int, help="export channels to use (keep the first ones)")
     parser.add_argument("--type", type=str, choices=["onnx", "pth"], default="onnx", help="output type")
     parser.add_argument("--image_size", type=int, default=512, help="image size to use for model")
@@ -26,14 +26,17 @@ def add_parser(subparser):
 
 
 def main(args):
-    dataset = load_config(args.dataset)
+    config = load_config(args.config)
 
     if args.type == "onnx":
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         # Workaround: PyTorch ONNX, DataParallel with GPU issue, cf https://github.com/pytorch/pytorch/issues/5315
 
-    num_classes = len(dataset["common"]["classes"])
-    num_channels = len(dataset["common"]["channels"])
+    num_classes = len(config["classes"]["classes"])
+    num_channels = 0
+    for channel in config["channels"]:
+        num_channels += len(channel["bands"])
+
     export_channels = num_channels if not args.export_channels else args.export_channels
     assert num_channels >= export_channels, "Will be hard indeed, to export more channels than thoses dataset provide"
 

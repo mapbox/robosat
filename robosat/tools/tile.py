@@ -28,7 +28,7 @@ def add_parser(subparser):
     parser.add_argument("--size", type=int, default=512, help="size of tiles side in pixels")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--type", type=str, choices=["image", "label"], default="image", help="image or label tiling")
-    parser.add_argument("--dataset", type=str, help="path to dataset configuration file, mandatory for label tiling")
+    parser.add_argument("--config", type=str, help="path to configuration file, mandatory for label tiling")
     parser.add_argument("--no_data", type=int, help="color considered as no data [0-255]. Skip related tile")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
     parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
@@ -42,12 +42,12 @@ def main(args):
 
     if args.type == "label":
         try:
-            dataset = load_config(args.dataset)
+            config = load_config(args.config)
         except:
             sys.exit("Error: Unable to load DataSet config file")
 
-        classes = dataset["common"]["classes"]
-        colors = dataset["common"]["colors"]
+        classes = config["classes"]["title"]
+        colors = config["classes"]["colors"]
         assert len(classes) == len(colors), "classes and colors coincide"
         assert len(colors) == 2, "only binary models supported right now"
 

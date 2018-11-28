@@ -28,7 +28,7 @@ def add_parser(subparser):
         "rasterize", help="rasterize features to label masks", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--zoom", type=int, required=True, help="zoom level of tiles")
     parser.add_argument("--size", type=int, default=512, help="size of rasterized image tiles in pixels")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
@@ -78,10 +78,10 @@ def burn(tile, features, size, burn_value=1):
 
 
 def main(args):
-    dataset = load_config(args.dataset)
+    config = load_config(args.config)
 
-    classes = dataset["common"]["classes"]
-    colors = dataset["common"]["colors"]
+    classes = config["classes"]["titles"]
+    colors = config["classes"]["colors"]
     assert len(classes) == len(colors), "classes and colors coincide"
     assert len(colors) == 2, "only binary models supported right now"
 

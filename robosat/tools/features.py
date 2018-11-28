@@ -22,7 +22,7 @@ def add_parser(subparser):
     )
 
     parser.add_argument("--type", type=str, required=True, help="type of feature to extract")
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--path", type=str, help="path to user's extension modules dir")
     parser.add_argument("masks", type=str, help="slippy map directory with segmentation masks")
     parser.add_argument("out", type=str, help="path to GeoJSON file to store features in")
@@ -38,10 +38,10 @@ def main(args):
     if args.type not in [name for _, name in modules]:
         sys.exit("Unknown type, thoses available are {}".format([name for _, name in modules]))
 
-    dataset = load_config(args.dataset)
-    labels = dataset["common"]["classes"]
+    config = load_config(args.config)
+    labels = config["classes"]["titles"]
     if args.type not in labels:
-        sys.exit("The type you asked is not consistent with yours classes in the dataset file provided.")
+        sys.exit("The type you asked is not consistent with yours classes in the config file provided.")
     index = labels.index(args.type)
 
     if args.path:

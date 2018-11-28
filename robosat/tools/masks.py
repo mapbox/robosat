@@ -19,7 +19,7 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--weights", type=float, nargs="+", help="weights for weighted average soft-voting")
     parser.add_argument("--web_ui", type=str, help="web ui client base url")
     parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
@@ -63,8 +63,8 @@ def main(args):
         mask = softvote(probs, axis=0, weights=args.weights)
         mask = mask.astype(np.uint8)
 
-        dataset = load_config(args.dataset)
-        palette = make_palette(dataset["common"]["colors"][0], dataset["common"]["colors"][1])
+        config = load_config(args.config)
+        palette = make_palette(config["classes"]["colors"][0], config["classes"]["colors"][1])
 
         out = Image.fromarray(mask, mode="P")
         out.putpalette(palette)

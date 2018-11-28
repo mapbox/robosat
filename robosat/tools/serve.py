@@ -84,7 +84,7 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
 
     parser.add_argument("--url", type=str, help="endpoint with {z}/{x}/{y} variables to fetch image tiles from")
     parser.add_argument("--checkpoint", type=str, required=True, help="model checkpoint to load")
@@ -96,7 +96,7 @@ def add_parser(subparser):
 
 
 def main(args):
-    dataset = load_config(args.dataset)
+    config = load_config(args.config)
 
     global size
     size = args.tile_size
@@ -114,7 +114,7 @@ def main(args):
     tiles = args.url
 
     global predictor
-    predictor = Predictor(args.checkpoint, dataset)
+    predictor = Predictor(args.checkpoint, config)
 
     app.run(host=args.host, port=args.port, threaded=False)
 
@@ -127,13 +127,13 @@ def send_png(image):
 
 
 class Predictor:
-    def __init__(self, checkpoint, dataset):
+    def __init__(self, checkpoint, config):
 
         self.cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if self.cuda else "cpu")
 
         self.checkpoint = checkpoint
-        self.dataset = dataset
+        self.config = config
 
         self.net = self.net_from_chkpt_()
 
@@ -156,7 +156,7 @@ class Predictor:
 
             mask = Image.fromarray(mask, mode="P")
 
-            palette = make_palette(*self.dataset["common"]["colors"])
+            palette = make_palette(*self.config["common"]["colors"])
             mask.putpalette(palette)
 
             return mask
@@ -168,7 +168,7 @@ class Predictor:
         # https://github.com/pytorch/pytorch/issues/7178
         chkpt = torch.load(self.checkpoint, map_location=map_location)
 
-        num_classes = len(self.dataset["common"]["classes"])
+        num_classes = len(self.config["classes"]["titles"])
 
         net = UNet(num_classes).to(self.device)
         net = nn.DataParallel(net)

@@ -34,7 +34,7 @@ def add_parser(subparser):
     parser.add_argument("--overlap", type=int, default=32, help="tile pixel overlap to predict on")
     parser.add_argument("--tile_size", type=int, required=True, help="tile size for slippy map tiles")
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
     parser.add_argument("--masks_output", action="store_true", help="output masks rather than probs")
     parser.add_argument("--web_ui", type=str, help="web ui base url")
     parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
@@ -45,8 +45,8 @@ def add_parser(subparser):
 
 
 def main(args):
-    dataset = load_config(args.dataset)
-    num_classes = len(dataset["common"]["classes"])
+    config = load_config(args.config)
+    num_classes = len(config["classes"]["titles"])
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -74,7 +74,7 @@ def main(args):
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
     if args.masks_output:
-        palette = make_palette(dataset["common"]["colors"][0], dataset["common"]["colors"][1])
+        palette = make_palette(config["classes"]["colors"][0], config["classes"]["colors"][1])
     else:
         palette = continuous_palette_for_color("pink", 256)
 

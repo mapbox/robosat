@@ -28,7 +28,7 @@ def add_parser(subparser):
     parser.add_argument("--ext", type=str, default="webp", help="file format to save images in (stack or side mode)")
     parser.add_argument("--labels", type=str, help="directory to read slippy map labels from (needed for QoD metric)")
     parser.add_argument("--masks", type=str, help="directory to read slippy map masks from (needed for QoD metric)")
-    parser.add_argument("--dataset", type=str, help="path to dataset configuration file (needed for QoD metric)")
+    parser.add_argument("--config", type=str, help="path to configuration file (needed for QoD metric)")
     parser.add_argument("--minimum_fg", type=float, default=0.0, help="skip tile if label foreground below, [0-100]")
     parser.add_argument("--maximum_fg", type=float, default=100.0, help="skip tile if label foreground above, [0-100]")
     parser.add_argument("--minimum_qod", type=float, default=0.0, help="skip tile if QoD metric below, [0-100]")
@@ -66,11 +66,11 @@ def compare(masks, labels, tile, classes):
 
 def main(args):
 
-    if not args.masks or not args.labels or not args.dataset:
+    if not args.masks or not args.labels or not args.config:
         if args.mode == "list":
-            sys.exit("Parameters masks, labels and dataset, are all mandatories in list mode.")
+            sys.exit("Parameters masks, labels and config, are all mandatories in list mode.")
         if args.minimum_fg > 0 or args.maximum_fg < 100 or args.minimum_qod > 0 or args.maximum_qod < 100:
-            sys.exit("Parameters masks, labels and dataset, are all mandatories in QoD filtering.")
+            sys.exit("Parameters masks, labels and config, are all mandatories in QoD filtering.")
 
     if args.images:
         tiles = [tile for tile, _ in tiles_from_slippy_map(args.images[0])]
@@ -97,8 +97,8 @@ def main(args):
 
         x, y, z = list(map(str, tile))
 
-        if args.masks and args.labels and args.dataset:
-            classes = load_config(args.dataset)["common"]["classes"]
+        if args.masks and args.labels and args.config:
+            classes = load_config(args.config)["classes"]["classes"]
             dist, fg_ratio, qod = compare(args.masks, args.labels, tile, classes)
             if not args.minimum_fg <= fg_ratio <= args.maximum_fg or not args.minimum_qod <= qod <= args.maximum_qod:
                 continue
