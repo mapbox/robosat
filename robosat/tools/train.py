@@ -48,6 +48,8 @@ def add_parser(subparser):
     parser.add_argument("--checkpoint", type=str, required=False, help="path to a model checkpoint (to retrain)")
     parser.add_argument("--resume", action="store_true", help="resume training (imply to provide a checkpoint)")
     parser.add_argument("--workers", type=int, default=0, help="number of workers pre-processing images")
+    parser.add_argument("--epochs", type=int, help="if set, override epochs value from config file")
+    parser.add_argument("--lr", type=float, help="if set, override learning rate value from config file")
     parser.add_argument("out", type=str, help="directory to save checkpoint .pth files and log")
 
     parser.set_defaults(func=main)
@@ -81,7 +83,8 @@ def main(args):
         except KeyError:
             sys.exit("Error: The loss function used, need dataset weights values")
 
-    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
+    lr = args.lr if args.lr else model["opt"]["lr"]
+    optimizer = Adam(net.parameters(), lr=lr, weight_decay=model["opt"]["decay"])
 
     resume = 0
     if args.checkpoint:
@@ -111,7 +114,7 @@ def main(args):
 
     train_loader, val_loader = get_dataset_loaders(model, dataset, args.workers)
 
-    num_epochs = model["opt"]["epochs"]
+    num_epochs = args.epochs if args.epochs else model["opt"]["epochs"]
     if resume >= num_epochs:
         sys.exit("Error: Epoch {} set in {} already reached by the checkpoint provided".format(num_epochs, args.model))
 
@@ -129,7 +132,7 @@ def main(args):
     log.log("Batch Size:\t\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t\t {}".format(model["common"]["image_size"]))
     log.log("Data Augmentation:\t {}".format(model["opt"]["data_augmentation"]))
-    log.log("Learning Rate:\t\t {}".format(model["opt"]["lr"]))
+    log.log("Learning Rate:\t\t {}".format(lr))
     log.log("Weight Decay:\t\t {}".format(model["opt"]["decay"]))
     log.log("Loss function:\t\t {}".format(model["opt"]["loss"]))
     log.log("ResNet pre-trained:\t {}".format(model["opt"]["pretrained"]))
