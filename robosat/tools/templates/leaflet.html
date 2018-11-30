@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RoboSat Leaflet WebUI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/geojson-vt@3.2.0/geojson-vt.js"></script>
+  <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.js"></script>
+</head>
+<body>
+  <div id="mapid" style="width:100%; height:100vh;"></div>
+  <script>
+function load_json(url, callback) {
+  if (url == '' ) return; var x = new XMLHttpRequest(); x.overrideMimeType("application/json"); x.open('GET', url, true);
+  x.onreadystatechange = function(){ if (x.readyState == 4 && x.status == "200") callback(JSON.parse(x.responseText)) };
+  x.send(null);
+};
+var m = L.map("mapid").setView({{center}}, {{zoom}});
+L.tileLayer("{{base_url}}/{z}/{x}/{y}.{{ext}}").addTo(m);
+
+var grid_style = { "color": "deeppink", "opacity": 0.3, "fill": false }
+load_json("{{tiles}}", function(grid){
+    L.vectorGrid.slicer( grid, { maxZoom: {{zoom}},
+                                 rendererFactory: L.canvas.tile,
+                                 vectorTileLayerStyles: { sliced: grid_style } } ).addTo(m) })
+  </script>
+</body>
+</html>

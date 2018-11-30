@@ -11,17 +11,27 @@ class Log:
     """
 
     def __init__(self, path, out=sys.stdout):
+
+        self.fp = None
         self.out = out
-        self.fp = open(path, "a")
-        assert self.fp, "Unable to open log file"
+        try:
+            if path:
+                if not os.path.isdir(os.path.dirname(path)):
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                self.fp = open(path, mode="a")
+        except:
+            sys.exit("Unable to write in log directory")
 
     """Log a new message to the opened log file, and optionnaly on stdout or stderr too
     """
 
     def log(self, msg):
-        assert self.fp, "Unable to write in log file"
-        self.fp.write(msg + os.linesep)
-        self.fp.flush()
+        try:
+            if self.fp:
+                self.fp.write(msg + os.linesep)
+                self.fp.flush()
 
-        if self.out:
-            print(msg, file=self.out)
+            if self.out:
+                print(msg, file=self.out)
+        except:
+            sys.exit("Unable to write in log file")

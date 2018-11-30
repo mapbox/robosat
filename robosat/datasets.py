@@ -5,9 +5,13 @@ Guaranteed to implement `__len__`, and `__getitem__`.
 See: http://pytorch.org/docs/0.3.1/data.html
 """
 
+import os
+import sys
 import torch
 from PIL import Image
 import torch.utils.data
+import cv2
+import numpy as np
 
 from robosat.tiles import tiles_from_slippy_map, buffer_tile_image
 
@@ -17,7 +21,7 @@ class SlippyMapTiles(torch.utils.data.Dataset):
     """Dataset for images stored in slippy map format.
     """
 
-    def __init__(self, root, transform=None):
+    def __init__(self, root, mode, transform=None):
         super().__init__()
 
         self.tiles = []
@@ -25,13 +29,27 @@ class SlippyMapTiles(torch.utils.data.Dataset):
 
         self.tiles = [(tile, path) for tile, path in tiles_from_slippy_map(root)]
         self.tiles.sort(key=lambda tile: tile[0])
+        self.mode = mode
 
     def __len__(self):
         return len(self.tiles)
 
     def __getitem__(self, i):
         tile, path = self.tiles[i]
-        image = Image.open(path)
+
+        if self.mode == "image":
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+
+        elif self.mode == "multibands":
+            image = cv2.imread(path, cv2.IMREAD_ANYCOLOR)
+            if len(image.shape) == 3 and image.shape[2] >= 3:
+                # FIXME Look twice to find an in-place way to perform a multiband BGR2RGB
+                g = image[:, :, 0]
+                image[:, :, 0] = image[:, :, 2]
+                image[:, :, 2] = g
+
+        elif self.mode == "mask":
+            image = np.array(Image.open(path).convert("P"))
 
         if self.transform is not None:
             image = self.transform(image)
@@ -40,42 +58,49 @@ class SlippyMapTiles(torch.utils.data.Dataset):
 
 
 # Multiple Slippy Map directories.
-# Think: one with images, one with masks, one with rasterized traces.
 class SlippyMapTilesConcatenation(torch.utils.data.Dataset):
     """Dataset to concate multiple input images stored in slippy map format.
     """
 
-    def __init__(self, inputs, target, joint_transform=None):
+    def __init__(self, path, channels, target, joint_transform=None):
         super().__init__()
+
+        assert len(channels), "Channels configuration empty"
+        self.channels = channels
+        self.inputs = dict()
+
+        for channel in channels:
+            for band in channel["bands"]:
+                self.inputs[channel["sub"]] = SlippyMapTiles(os.path.join(path, channel["sub"]), mode="multibands")
+
+        self.target = SlippyMapTiles(target, mode="mask")
 
         # No transformations in the `SlippyMapTiles` instead joint transformations in getitem
         self.joint_transform = joint_transform
-
-        self.inputs = [SlippyMapTiles(inp) for inp in inputs]
-        self.target = SlippyMapTiles(target)
-
-        assert len(set([len(dataset) for dataset in self.inputs])) == 1, "same number of tiles in all images"
-        assert len(self.target) == len(self.inputs[0]), "same number of tiles in images and label"
 
     def __len__(self):
         return len(self.target)
 
     def __getitem__(self, i):
-        # at this point all transformations are applied and we expect to work with raw tensors
-        inputs = [dataset[i] for dataset in self.inputs]
 
-        images = [image for image, _ in inputs]
-        tiles = [tile for _, tile in inputs]
+        mask, tile = self.target[i]
 
-        mask, mask_tile = self.target[i]
+        for channel in self.channels:
+            try:
+                data, band_tile = self.inputs[channel["sub"]][i]
+                assert band_tile == tile
 
-        assert len(set(tiles)) == 1, "all images are for the same tile"
-        assert tiles[0] == mask_tile, "image tile is the same as label tile"
+                for band in channel["bands"]:
+                    data_band = data[:, :, int(band) - 1] if len(data.shape) == 3 else data_band
+                    data_band = data_band.reshape(mask.shape[0], mask.shape[1], 1)
+                    tensor = np.concatenate((tensor, data_band), axis=2) if "tensor" in locals() else data_band
+            except:
+                sys.exit("Unable to concatenate input Tensor")
 
         if self.joint_transform is not None:
-            images, mask = self.joint_transform(images, mask)
+            tensor, mask = self.joint_transform(tensor, mask)
 
-        return torch.cat(images, dim=0), mask, tiles
+        return tensor, mask, tile
 
 
 # Todo: once we have the SlippyMapDataset this dataset should wrap
@@ -113,7 +138,7 @@ class BufferedSlippyMapDirectory(torch.utils.data.Dataset):
 
     def __getitem__(self, i):
         tile, path = self.tiles[i]
-        image = buffer_tile_image(tile, self.tiles, overlap=self.overlap, tile_size=self.size)
+        image = np.array(buffer_tile_image(tile, self.tiles, overlap=self.overlap, tile_size=self.size))
 
         if self.transform is not None:
             image = self.transform(image)

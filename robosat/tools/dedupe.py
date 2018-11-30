@@ -17,11 +17,11 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("osm", type=str, help="ground truth GeoJSON feature collection from OpenStreetMap")
-    parser.add_argument("predicted", type=str, help="predicted GeoJSON feature collection to deduplicate")
     parser.add_argument(
         "--threshold", type=float, required=True, help="maximum allowed IoU to keep predictions, between 0.0 and 1.0"
     )
+    parser.add_argument("osm", type=str, help="ground truth GeoJSON feature collection from OpenStreetMap")
+    parser.add_argument("predicted", type=str, help="predicted GeoJSON feature collection to deduplicate")
     parser.add_argument("out", type=str, help="path to GeoJSON to save deduplicated features to")
 
     parser.set_defaults(func=main)

@@ -12,17 +12,16 @@ class TestSlippyMapTiles(unittest.TestCase):
     images = "tests/fixtures/images/"
 
     def test_len(self):
-        dataset = SlippyMapTiles(TestSlippyMapTiles.images)
+        dataset = SlippyMapTiles(TestSlippyMapTiles.images, "image")
         self.assertEqual(len(dataset), 3)
 
     def test_getitem(self):
-        dataset = SlippyMapTiles(TestSlippyMapTiles.images)
+        dataset = SlippyMapTiles(TestSlippyMapTiles.images, "image")
         image, tile = dataset[0]
 
         assert tile == mercantile.Tile(69105, 105093, 18)
-        # Inspired by: https://github.com/python-pillow/Pillow/blob/master/Tests/test_image.py#L37-L38
-        self.assertEqual(repr(image)[:45], "<PIL.JpegImagePlugin.JpegImageFile image mode")
-        self.assertEqual(image.size, (512, 512))
+        self.assertEqual(image.size, 512 * 512 * 3)
+        self.assertEqual(image.shape, (512, 512, 3))
 
     def test_getitem_with_transform(self):
         # TODO
@@ -31,22 +30,24 @@ class TestSlippyMapTiles(unittest.TestCase):
 
 class TestSlippyMapTilesConcatenation(unittest.TestCase):
     def test_len(self):
-        inputs = ["tests/fixtures/images/"]
+        path   = "tests/fixtures"
         target = "tests/fixtures/labels/"
+        channels = [{"sub": "images", "bands": [1, 2, 3]}]
 
         transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
-        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
+        dataset = SlippyMapTilesConcatenation(path, channels, target, transform)
 
         self.assertEqual(len(dataset), 3)
 
     def test_getitem(self):
-        inputs = ["tests/fixtures/images/"]
+        path   = "tests/fixtures"
         target = "tests/fixtures/labels/"
+        channels = [{"sub": "images", "bands": [1, 2, 3]}]
 
         transform = JointCompose([JointTransform(ImageToTensor(), MaskToTensor())])
-        dataset = SlippyMapTilesConcatenation(inputs, target, transform)
+        dataset = SlippyMapTilesConcatenation(path, channels, target, transform)
 
         images, mask, tiles = dataset[0]
-        self.assertEqual(tiles[0], mercantile.Tile(69105, 105093, 18))
+        self.assertEqual(tiles, mercantile.Tile(69105, 105093, 18))
         self.assertEqual(type(images), torch.Tensor)
         self.assertEqual(type(mask), torch.Tensor)

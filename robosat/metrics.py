@@ -24,16 +24,19 @@ class Metrics:
         self.fp = 0
         self.tp = 0
 
-    def add(self, actual, predicted):
+    def add(self, label, predicted, is_prob=True):
         """Adds an observation to the tracker.
 
         Args:
-          actual: the ground truth labels.
-          predicted: the predicted labels.
+          label: the ground truth labels.
+          predicted: the predicted prob or mask.
+          is_prob: as predicted could be either a prob or a mask.
         """
 
-        masks = torch.argmax(predicted, 0)
-        confusion = masks.view(-1).float() / actual.view(-1).float()
+        if is_prob:
+            predicted = torch.argmax(predicted, 0)
+
+        confusion = predicted.view(-1).float() / label.view(-1).float()
 
         self.tn += torch.sum(torch.isnan(confusion)).item()
         self.fn += torch.sum(confusion == float("inf")).item()
@@ -46,7 +49,13 @@ class Metrics:
         Returns:
           The mean Intersection over Union score for all observations seen so far.
         """
-        return np.nanmean([self.tn / (self.tn + self.fn + self.fp), self.tp / (self.tp + self.fn + self.fp)])
+
+        try:
+            miou = np.nanmean([self.tn / (self.tn + self.fn + self.fp), self.tp / (self.tp + self.fn + self.fp)])
+        except ZeroDivisionError:
+            miou = float("NaN")
+
+        return miou
 
     def get_fg_iou(self):
         """Retrieves the foreground Intersection over Union score.
@@ -58,7 +67,7 @@ class Metrics:
         try:
             iou = self.tp / (self.tp + self.fn + self.fp)
         except ZeroDivisionError:
-            iou = float("Inf")
+            iou = float("NaN")
 
         return iou
 
@@ -74,7 +83,7 @@ class Metrics:
                 (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
             )
         except ZeroDivisionError:
-            mcc = float("Inf")
+            mcc = float("NaN")
 
         return mcc
 

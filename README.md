@@ -87,7 +87,7 @@ The following describes the installation from scratch.
 - Install native system dependencies required for Python 3 bindings
 
 ```bash
-apt-get install build-essential libboost-python-dev libexpat1-dev zlib1g-dev libbz2-dev libspatialindex-dev
+apt-get install build-essential libboost-python-dev libexpat1-dev zlib1g-dev libbz2-dev libspatialindex-dev libjpeg-turbo8-dev libwebp-dev
 ```
 
 - Use a virtualenv for installing this project locally

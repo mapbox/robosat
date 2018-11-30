@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RoboSat Compare WebUI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="main" style="height:100vh; position:relative; text-align:center">
+    <p>Right Arrow: next image to compare, if any.</p>
+    <p>Left Arrow: previous image to compare, if any.</p>
+    <p>SpaceBar: select, or unselect, the current image.</p>
+    <p>Esc: ask to copy selected images, as a text cover, to clipboard.</p>
+  </div>
+  <script>
+class XYZ 
+{ constructor(json) { this.fts = json["features"]; this.i = 0; this.sel = Array.apply(false, Array(this.fts.length)) }
+  get()     { var p = this.fts[this.i]["properties"]; return { x: p.x, y: p.y, z: p.z } }
+  next()    { if ((1 + this.i - this.fts.length) <= 0) this.i++ ; return this.get(this.i) }
+  prev()    { if ((this.i - 1) >= 0) this.i-- ; return this.get(this.i) }
+  ping()    { this.sel[this.i] = this.sel[this.i] ? false : this.cover() }
+  is_sel()  { return this.sel[this.i] }
+  get_sel() { var sel = ""; for (var i in this.sel) { if (this.sel[i]) { sel += this.sel[i] + " \n" } } return sel }
+  path()    { var xyz = this.get(); return xyz.z + "/" + xyz.x + "/" + xyz.y }
+  cover()   { var xyz = this.get(); return xyz.x + "," + xyz.y + "," + xyz.z }
+}
+function load_json(url, callback)
+{ if (url == "") return; var x = new XMLHttpRequest(); x.overrideMimeType("application/json"); x.open("GET", url, true);
+  x.onreadystatechange = function(){ if (x.readyState == 4 && x.status == "200") callback(JSON.parse(x.responseText)) };
+  x.send(null);
+}
+function display_img(xyz)
+{ document.getElementById("main").innerHTML = "<img id='image' src='" + xyz.path() + ".{{ext}}' />";
+  var style  = "position:absolute; width:auto; height:auto; margin:auto; top:0; bottom:0; left:0; right:0; "
+             + "vertical-align:middle; max-width:100%; max-height:100%";
+  document.getElementById("image").style = style;
+  if (xyz.is_sel()) { document.getElementById("image").style.border = "2px solid #cc0099" }
+               else { document.getElementById("image").style.border = "2px solid #ffffff" }
+}
+
+var msg_sel = `
+Copy selected tiles to clipboard: Ctrl+C, Enter.
+HINT: If any issue with your browser, use instead, from JS console: console.log(xyz.get_sel())`
+
+load_json("{{tiles}}", function(json)
+  { xyz = new XYZ(json); document.addEventListener("keydown", (e) =>
+    {
+      if (e.key == "ArrowRight")     { xyz.next() ; display_img(xyz) }
+      if (e.key == "ArrowLeft")      { xyz.prev() ; display_img(xyz) }
+      if (e.key == " " /* Space */ ) { xyz.ping() ; display_img(xyz) }
+      if (e.key == "Escape" )        { window.prompt(msg_sel, xyz.get_sel()) }
+    })
+  }
+)
+  </script>
+</body>
+</html>

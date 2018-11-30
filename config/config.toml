@@ -1,0 +1,55 @@
+# RoboSat Configuration
+# For syntax see: https://github.com/toml-lang/toml#table-of-contents
+
+[dataset]
+  # The slippy map dataset's base directory.
+  path = '/tmp/slippy-map-dir/'
+
+  # Dataset specific class weights computes on the training data.
+  # Needed by 'mIoU' and 'CrossEntropy' losses to deal with unbalanced classes.
+  # Note: use `./rs weights -h` to compute these for new datasets.
+  weights = [1.6248, 5.762827]
+
+
+[classes]
+  # Human representation for classes.
+  titles = ['background', 'parking']
+
+  # Color map for visualization and representing classes in masks.
+  # Note: available colors are either CSS3 colors names or #RRGGBB hexadecimal representation.
+  colors  = ['denim', 'orange']
+
+
+# Channels configuration let your indicate wich dataset sub-directory and bands to take as input
+# You could so, add several channels blocks to compose your input Tensor. Orders are meaningful.
+[[channels]]
+sub = "images"
+bands = [1,2,3]
+
+
+# Model specific attributes.
+[model]
+
+  # Batch size for training.
+  batch_size = 2
+
+  # Image side size in pixels.
+  image_size = 512
+
+  # Total number of epochs to train for.
+  epochs     = 10
+
+  # Learning rate for the optimizer.
+  lr         = 0.0001
+
+  # Weight decay l2 penalty for the optimizer
+  decay      = 0.0001
+
+  # Loss function name (e.g 'Lovasz', 'mIoU' or 'CrossEntropy')
+  loss = 'Lovasz'
+
+  # Data augmentation, Flip or Rotate probability
+  data_augmentation = 0.75
+
+  # Use ImageNet weights pretraining
+  pretrained = true

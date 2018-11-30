@@ -10,7 +10,7 @@ from torchvision.transforms import Compose
 
 from robosat.config import load_config
 from robosat.datasets import SlippyMapTiles
-from robosat.transforms import ConvertImageMode, MaskToTensor
+from robosat.transforms import MaskToTensor
 
 
 def add_parser(subparser):
@@ -18,20 +18,18 @@ def add_parser(subparser):
         "weights", help="computes class weights on dataset", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--dataset", type=str, required=True, help="path to dataset configuration file")
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    dataset = load_config(args.dataset)
+    config = load_config(args.config)
+    path = config["dataset"]["path"]
+    num_classes = len(config["classes"]["titles"])
 
-    path = dataset["common"]["dataset"]
-    num_classes = len(dataset["common"]["classes"])
-
-    train_transform = Compose([ConvertImageMode(mode="P"), MaskToTensor()])
-
-    train_dataset = SlippyMapTiles(os.path.join(path, "training", "labels"), transform=train_transform)
+    train_transform = Compose([MaskToTensor()])
+    train_dataset = SlippyMapTiles(os.path.join(path, "training", "labels"), "mask", transform=train_transform)
 
     n = 0
     counts = np.zeros(num_classes, dtype=np.int64)

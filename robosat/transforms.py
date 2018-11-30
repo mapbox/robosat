@@ -2,56 +2,43 @@
 """
 
 import random
-
 import torch
+import cv2
 import numpy as np
-from PIL import Image
-
-import torchvision
 
 
-# Callable to convert a RGB image into a PyTorch tensor.
-ImageToTensor = torchvision.transforms.ToTensor
-
-
-class MaskToTensor:
-    """Callable to convert a PIL image into a PyTorch tensor.
+class ImageToTensor:
+    """Callable to convert a NumPy H,W,C image into a PyTorch C,W,H tensor.
     """
 
     def __call__(self, image):
         """Converts the image into a tensor.
 
         Args:
-          image: the PIL image to convert into a PyTorch tensor.
+          image: the image to convert into a PyTorch tensor.
 
         Returns:
           The converted PyTorch tensor.
         """
 
-        return torch.from_numpy(np.array(image, dtype=np.uint8)).long()
+        return torch.from_numpy(np.moveaxis(image, 2, 0)).float()
 
 
-class ConvertImageMode:
-    """Callable to convert a PIL image into a specific image mode (e.g. RGB, P)
+class MaskToTensor:
+    """Callable to convert a NumPy H,W image into a PyTorch tensor.
     """
 
-    def __init__(self, mode):
-        """Creates an `ConvertImageMode` instance.
+    def __call__(self, mask):
+        """Converts the mask into a tensor.
 
         Args:
-          mode: the PIL image mode string
+          mask: the mask to convert into a PyTorch tensor.
+
+        Returns:
+          The converted PyTorch tensor.
         """
 
-        self.mode = mode
-
-    def __call__(self, image):
-        """Applies to mode conversion to an image.
-
-        Args:
-          image: the PIL.Image image to transform.
-        """
-
-        return image.convert(self.mode)
+        return torch.from_numpy(mask).long()
 
 
 class JointCompose:
@@ -67,21 +54,21 @@ class JointCompose:
 
         self.transforms = transforms
 
-    def __call__(self, images, mask):
-        """Applies multiple transformations to the images and the mask at the same time.
+    def __call__(self, image, mask):
+        """Applies multiple transformations to the image and its mask at the same time.
 
         Args:
-          images: the PIL.Image images to transform.
-          mask: the PIL.Image mask to transform.
+          image: the image to transform.
+          mask: the mask to transform.
 
         Returns:
-          The transformed PIL.Image (images, mask) tuple.
+          The transformed (image, mask) tuple.
         """
 
         for transform in self.transforms:
-            images, mask = transform(images, mask)
+            image, mask = transform(image, mask)
 
-        return images, mask
+        return image, mask
 
 
 class JointTransform:
@@ -94,128 +81,108 @@ class JointTransform:
         """Creates an `JointTransform` instance.
 
         Args:
-          image_transform: the transformation to run on the images or `None` for no-op.
+          image_transform: the transformation to run on the image or `None` for no-op.
           mask_transform: the transformation to run on the mask or `None` for no-op.
 
         Returns:
-          The (images, mask) tuple with the transformations applied.
+          The (image, mask) tuple with the transformations applied.
         """
 
         self.image_transform = image_transform
         self.mask_transform = mask_transform
 
-    def __call__(self, images, mask):
-        """Applies the transformations associated with images and their mask.
+    def __call__(self, image, mask):
+        """Applies the transformations associated with image and its mask.
 
         Args:
-          images: the PIL.Image images to transform.
-          mask: the PIL.Image mask to transform.
+          image: the image to transform.
+          mask: the mask to transform.
 
         Returns:
-          The PIL.Image (images, mask) tuple with images and mask transformed.
+          The (image, mask) tuple with the transformations applied.
         """
 
         if self.image_transform is not None:
-            images = [self.image_transform(v) for v in images]
+            image = self.image_transform(image)
 
         if self.mask_transform is not None:
             mask = self.mask_transform(mask)
 
-        return images, mask
+        return image, mask
 
 
-class JointRandomVerticalFlip:
-    """Callable to randomly flip images and its mask top to bottom.
+class JointRandomFlipOrRotate:
+    """Callable to randomly rotate image and its mask.
     """
 
     def __init__(self, p):
-        """Creates an `JointRandomVerticalFlip` instance.
-
-        Args:
-          p: the probability for flipping.
-        """
-
-        self.p = p
-
-    def __call__(self, images, mask):
-        """Randomly flips images and their mask top to bottom.
-
-        Args:
-          images: the PIL.Image image to transform.
-          mask: the PIL.Image mask to transform.
-
-        Returns:
-          The PIL.Image (images, mask) tuple with either images and mask flipped or none of them flipped.
-        """
-
-        if random.random() < self.p:
-            return [v.transpose(Image.FLIP_TOP_BOTTOM) for v in images], mask.transpose(Image.FLIP_TOP_BOTTOM)
-        else:
-            return images, mask
-
-
-class JointRandomHorizontalFlip:
-    """Callable to randomly flip images and their mask left to right.
-    """
-
-    def __init__(self, p):
-        """Creates an `JointRandomHorizontalFlip` instance.
-
-        Args:
-          p: the probability for flipping.
-        """
-
-        self.p = p
-
-    def __call__(self, images, mask):
-        """Randomly flips image and their mask left to right.
-
-        Args:
-          images: the PIL.Image images to transform.
-          mask: the PIL.Image mask to transform.
-
-        Returns:
-          The PIL.Image (images, mask) tuple with either images and mask flipped or none of them flipped.
-        """
-
-        if random.random() < self.p:
-            return [v.transpose(Image.FLIP_LEFT_RIGHT) for v in images], mask.transpose(Image.FLIP_LEFT_RIGHT)
-        else:
-            return images, mask
-
-
-class JointRandomRotation:
-    """Callable to randomly rotate images and their mask.
-    """
-
-    def __init__(self, p, degree):
         """Creates an `JointRandomRotation` instance.
 
         Args:
           p: the probability for rotating.
         """
-
+        assert p >= 0.0 and p <= 1.0, "Probability must be expressed in 0-1 interval"
         self.p = p
 
-        methods = {90: Image.ROTATE_90, 180: Image.ROTATE_180, 270: Image.ROTATE_270}
-
-        if degree not in methods.keys():
-            raise NotImplementedError("We only support multiple of 90 degree rotations for now")
-
-        self.method = methods[degree]
-
-    def __call__(self, images, mask):
-        """Randomly rotates images and their mask.
+    def __call__(self, image, mask):
+        """Randomly rotates or flip image and its mask.
 
         Args:
-          images: the PIL.Image image to transform.
-          mask: the PIL.Image mask to transform.
+          image: the image to transform.
+          mask: the mask to transform.
 
         Returns:
-          The PIL.Image (images, mask) tuple with either images and mask rotated or none of them rotated.
+          The (image, mask) tuple with either image and mask flip or rotated or kept untouched (but synced)
         """
 
-        if random.random() < self.p:
-            return [v.transpose(self.method) for v in images], mask.transpose(self.method)
+        if random.random() > self.p:
+            return image, mask
+
+        transform = random.choice(["Rotate90", "Rotate180", "Rotate270", "HorizontalFlip", "VerticalFlip"])
+
+        if transform == "Rotate90":
+            return cv2.flip(cv2.transpose(image), +1), cv2.flip(cv2.transpose(mask), +1)
+        elif transform == "Rotate180":
+            return cv2.flip(image, -1), cv2.flip(mask, -1)
+        elif transform == "Rotate270":
+            return cv2.flip(cv2.transpose(image), 0), cv2.flip(cv2.transpose(mask), 0)
+        elif transform == "HorizontalFlip":
+            return cv2.flip(image, +1), cv2.flip(mask, +1)
+        elif transform == "VerticalFlip":
+            return cv2.flip(image, 0), cv2.flip(mask, 0)
+
+
+class JointResize:
+    """Callable to resize image and its mask
+    """
+
+    def __init__(self, size):
+        """Creates an `JointResize` instance.
+
+        Args:
+          size: the desired square side size
+        """
+        self.hw = (size, size)
+
+    def __call__(self, image, mask):
+        """Resize image and its mask
+
+        Args:
+          image: the image to transform.
+          mask: the mask to transform.
+
+        Returns:
+          The (image, mask) tuple resized
+        """
+
+        if self.hw == image.shape[0:2]:
+            pass
+        elif self.hw[0] < image.shape[0] and self.hw[1] < image.shape[1]:
+            image = cv2.resize(image, self.hw, interpolation=cv2.INTER_AREA)
         else:
-            return images, mask
+            image = cv2.resize(image, self.hw, interpolation=cv2.INTER_LINEAR)
+
+        if self.hw != mask.shape:
+            mask = cv2.resize(mask, self.hw, interpolation=cv2.INTER_NEAREST)
+
+        return image, mask

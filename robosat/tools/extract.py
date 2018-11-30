@@ -1,12 +1,10 @@
+import os
+import sys
 import argparse
 
-from robosat.osm.parking import ParkingHandler
-from robosat.osm.building import BuildingHandler
-from robosat.osm.road import RoadHandler
-
-# Register your osmium handlers here; in addition to the osmium handler interface
-# they need to support a `save(path)` function for GeoJSON serialization to a file.
-handlers = {"parking": ParkingHandler, "building": BuildingHandler, "road": RoadHandler}
+import pkgutil
+from pathlib import Path
+from importlib import import_module
 
 
 def add_parser(subparser):
@@ -16,14 +14,27 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--type", type=str, required=True, choices=handlers.keys(), help="type of feature to extract")
-    parser.add_argument("map", type=str, help="path to .osm.pbf base map")
+    parser.add_argument("--type", type=str, required=True, help="type of feature to extract")
+    parser.add_argument("--path", type=str, help="path to user's extension modules dir")
+    parser.add_argument("pbf", type=str, help="path to .osm.pbf base map")
     parser.add_argument("out", type=str, help="path to GeoJSON file to store features in")
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    handler = handlers[args.type]()
-    handler.apply_file(filename=args.map, locations=True)
+    module_search_path = [args.path] if args.path else []
+    module_search_path.append(os.path.join(Path(__file__).parent.parent, "osm"))
+    modules = [(path, name) for path, name, _ in pkgutil.iter_modules(module_search_path) if name != "core"]
+    if args.type not in [name for _, name in modules]:
+        sys.exit("Unknown type, thoses available are {}".format([name for _, name in modules]))
+
+    if args.path:
+        sys.path.append(args.path)
+        module = import_module(args.type)
+    else:
+        module = import_module("robosat.osm.{}".format(args.type))
+
+    handler = getattr(module, "{}Handler".format(args.type.title()))()
+    handler.apply_file(filename=args.pbf, locations=True)
     handler.save(args.out)

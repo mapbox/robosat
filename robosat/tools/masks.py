@@ -9,6 +9,7 @@ from PIL import Image
 
 from robosat.tiles import tiles_from_slippy_map
 from robosat.colors import make_palette
+from robosat.utils import web_ui
 
 
 def add_parser(subparser):
@@ -18,9 +19,12 @@ def add_parser(subparser):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
+    parser.add_argument("--config", type=str, required=True, help="path to configuration file")
+    parser.add_argument("--weights", type=float, nargs="+", help="weights for weighted average soft-voting")
+    parser.add_argument("--web_ui", type=str, help="web ui client base url")
+    parser.add_argument("--web_ui_template", type=str, help="path to an alternate web ui template")
     parser.add_argument("masks", type=str, help="slippy map directory to save masks to")
     parser.add_argument("probs", type=str, nargs="+", help="slippy map directories with class probabilities")
-    parser.add_argument("--weights", type=float, nargs="+", help="weights for weighted average soft-voting")
 
     parser.set_defaults(func=main)
 
@@ -59,7 +63,9 @@ def main(args):
         mask = softvote(probs, axis=0, weights=args.weights)
         mask = mask.astype(np.uint8)
 
-        palette = make_palette("denim", "orange")
+        config = load_config(args.config)
+        palette = make_palette(config["classes"]["colors"][0], config["classes"]["colors"][1])
+
         out = Image.fromarray(mask, mode="P")
         out.putpalette(palette)
 
@@ -67,6 +73,11 @@ def main(args):
 
         path = os.path.join(args.masks, str(z), str(x), str(y) + ".png")
         out.save(path, optimize=True)
+
+    if args.web_ui:
+        template = "leaflet.html" if not args.web_ui_template else args.web_ui_template
+        tiles = [tile for tile, _ in list(tiles_from_slippy_map(args.probs[0]))]
+        web_ui(args.masks, args.web_ui, tiles, tiles, "png", template)
 
 
 def softvote(probs, axis=0, weights=None):

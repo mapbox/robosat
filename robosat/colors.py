@@ -2,76 +2,30 @@
 """
 
 import colorsys
-
-from enum import Enum, unique
-
-
-# Todo: user should be able to bring her own color palette.
-# Functions need to account for that and not use one palette.
-
-
-def _rgb(v):
-    r, g, b = v[1:3], v[3:5], v[5:7]
-    return int(r, 16), int(g, 16), int(b, 16)
-
-
-@unique
-class Mapbox(Enum):
-    """Mapbox-themed colors.
-
-    See: https://www.mapbox.com/base/styling/color/
-    """
-
-    dark = _rgb("#404040")
-    gray = _rgb("#eeeeee")
-    light = _rgb("#f8f8f8")
-    white = _rgb("#ffffff")
-    cyan = _rgb("#3bb2d0")
-    blue = _rgb("#3887be")
-    bluedark = _rgb("#223b53")
-    denim = _rgb("#50667f")
-    navy = _rgb("#28353d")
-    navydark = _rgb("#222b30")
-    purple = _rgb("#8a8acb")
-    teal = _rgb("#41afa5")
-    green = _rgb("#56b881")
-    yellow = _rgb("#f1f075")
-    mustard = _rgb("#fbb03b")
-    orange = _rgb("#f9886c")
-    red = _rgb("#e55e5e")
-    pink = _rgb("#ed6498")
+import webcolors
+import numpy as np
 
 
 def make_palette(*colors):
-    """Builds a PIL-compatible color palette from color names.
+    """Builds a PIL-compatible color palette from CSS3 color names, or hex values patterns as #RRGGBB
 
     Args:
       colors: variable number of color names.
     """
 
-    rgbs = [Mapbox[color].value for color in colors]
-    flattened = sum(rgbs, ())
-    return list(flattened)
+    assert 0 < len(colors) <= 256
 
+    hexs = [webcolors.CSS3_NAMES_TO_HEX[color] if color[0] != "#" else color for color in colors]
+    rgbs = [(int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)) for h in hexs]
 
-def color_string_to_rgb(color):
-    """Convert color string to a list of RBG integers.
-
-    Args:
-      color: the string color value for example "250,0,0"
-
-    Returns:
-      color: as a list of RGB integers for example [250,0,0]
-    """
-
-    return [*map(int, color.split(","))]
+    return list(sum(rgbs, ()))
 
 
 def continuous_palette_for_color(color, bins=256):
     """Creates a continuous color palette based on a single color.
 
     Args:
-      color: the rgb color tuple to create a continuous palette for.
+      color: the CSS3 color name or it's hex values as #RRGGBB, to create a continuous palette for.
       bins: the number of colors to create in the continuous palette.
 
     Returns:
@@ -81,15 +35,29 @@ def continuous_palette_for_color(color, bins=256):
     # A quick and dirty way to create a continuous color palette is to convert from the RGB color
     # space into the HSV color space and then only adapt the color's saturation (S component).
 
-    r, g, b = [v / 255 for v in Mapbox[color].value]
+    hexs = webcolors.CSS3_NAMES_TO_HEX[color] if color[0] != "#" else color
+    r, g, b = [(int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)) for h in hexs]
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
 
+    assert 0 < bins <= 256
+
     palette = []
-
     for i in range(bins):
-        ns = (1 / bins) * (i + 1)
-        palette.extend([int(v * 255) for v in colorsys.hsv_to_rgb(h, ns, v)])
-
-    assert len(palette) // 3 == bins
+        r, g, b = [int(v * 255) for v in colorsys.hsv_to_rgb(h, (1 / bins) * (i + 1), v)]
+        palette.extend(r, g, b)
 
     return palette
+
+
+def complementary_palette(palette):
+    """Creates a PIL complementary colors palette based on an initial PIL palette"""
+
+    comp_palette = []
+    colors = [palette[i : i + 3] for i in range(0, len(palette), 3)]
+
+    for color in colors:
+        r, g, b = [v for v in color]
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        comp_palette.extend(map(int, colorsys.hsv_to_rgb((h + 0.5) % 1, s, v)))
+
+    return comp_palette

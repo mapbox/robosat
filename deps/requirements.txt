@@ -1,6 +1,6 @@
 torchvision
 numpy
-pillow
+pillow-simd
 scipy
 opencv-contrib-python
 tqdm
@@ -17,3 +17,4 @@ rtree
 pyproj
 toml
 pytest
+webcolors

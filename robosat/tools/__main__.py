@@ -16,6 +16,7 @@ from robosat.tools import (
     rasterize,
     serve,
     subset,
+    tile,
     train,
     weights,
 )
@@ -27,6 +28,7 @@ def add_parsers():
 
     # Add your tool's entry point below.
 
+    tile.add_parser(subparser)
     extract.add_parser(subparser)
     cover.add_parser(subparser)
     download.add_parser(subparser)
