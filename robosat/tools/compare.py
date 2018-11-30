@@ -98,7 +98,7 @@ def main(args):
         x, y, z = list(map(str, tile))
 
         if args.masks and args.labels and args.config:
-            classes = load_config(args.config)["classes"]["classes"]
+            classes = load_config(args.config)["classes"]["titles"]
             dist, fg_ratio, qod = compare(args.masks, args.labels, tile, classes)
             if not args.minimum_fg <= fg_ratio <= args.maximum_fg or not args.minimum_qod <= qod <= args.maximum_qod:
                 continue

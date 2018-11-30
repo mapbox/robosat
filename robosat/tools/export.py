@@ -32,7 +32,7 @@ def main(args):
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         # Workaround: PyTorch ONNX, DataParallel with GPU issue, cf https://github.com/pytorch/pytorch/issues/5315
 
-    num_classes = len(config["classes"]["classes"])
+    num_classes = len(config["classes"]["titles"])
     num_channels = 0
     for channel in config["channels"]:
         num_channels += len(channel["bands"])
