@@ -46,7 +46,7 @@ def main(args):
         except:
             sys.exit("Error: Unable to load DataSet config file")
 
-        classes = config["classes"]["title"]
+        classes = config["classes"]["titles"]
         colors = config["classes"]["colors"]
         assert len(classes) == len(colors), "classes and colors coincide"
         assert len(colors) == 2, "only binary models supported right now"
