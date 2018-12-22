@@ -20,3 +20,4 @@ RUN python3 -m pip install http://download.pytorch.org/whl/cu${CU}/torch-${TCH}-
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
+ENV PATH="${PATH}:/app"
