@@ -19,6 +19,7 @@ def add_parser(subparser):
     parser.add_argument("url", type=str, help="endpoint with {z}/{x}/{y} variables to fetch image tiles from")
     parser.add_argument("--ext", type=str, default="webp", help="file format to save images in")
     parser.add_argument("--rate", type=int, default=10, help="rate limit in max. requests per second")
+    parser.add_argument("--zoffset", type=int, default=0, help="offset of the data provider's zoom level from slippy map definition")
     parser.add_argument("tiles", type=str, help="path to .csv tiles file")
     parser.add_argument("out", type=str, help="path to slippy map directory for storing tiles")
 
@@ -48,7 +49,7 @@ def main(args):
                 if os.path.isfile(path):
                     return tile, True
 
-                url = args.url.format(x=tile.x, y=tile.y, z=tile.z)
+                url = args.url.format(x=tile.x, y=tile.y, z=tile.z + args.zoffset)
 
                 res = fetch_image(session, url)
 
