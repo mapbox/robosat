@@ -97,10 +97,10 @@ python3 -m venv .env
 . .env/bin/activate
 ```
 
-- Get the PyTorch wheel for your environment from http://pytorch.org. For example for Python 3.5 and CUDA 8
+- Get the PyTorch wheel for your environment from http://pytorch.org. For example for Python 3.6 and CUDA 10
 
 ```bash
-python3 -m pip install torch
+python3 -m pip install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
 ```
 
 - Install remaining dependencies
