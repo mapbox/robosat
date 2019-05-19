@@ -17,6 +17,7 @@ def add_parser(subparser):
     )
 
     parser.add_argument("--type", type=str, required=True, choices=handlers.keys(), help="type of feature to extract")
+    parser.add_argument("--batch", type=int, default=100000, help="number of features to save per file")
     parser.add_argument("map", type=str, help="path to .osm.pbf base map")
     parser.add_argument("out", type=str, help="path to GeoJSON file to store features in")
 
@@ -24,6 +25,6 @@ def add_parser(subparser):
 
 
 def main(args):
-    handler = handlers[args.type]()
+    handler = handlers[args.type](args.out, args.batch)
     handler.apply_file(filename=args.map, locations=True)
-    handler.save(args.out)
+    handler.flush()

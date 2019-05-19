@@ -5,6 +5,8 @@ import osmium
 import geojson
 import shapely.geometry
 
+from robosat.osm.core import FeatureStorage
+
 
 class RoadHandler(osmium.SimpleHandler):
     """Extracts road polygon features (visible in satellite imagery) from the map.
@@ -90,9 +92,9 @@ class RoadHandler(osmium.SimpleHandler):
 
     EARTH_MEAN_RADIUS = 6371004.0
 
-    def __init__(self):
+    def __init__(self, out, batch):
         super().__init__()
-        self.features = []
+        self.storage = FeatureStorage(out, batch)
 
     def way(self, w):
         if "highway" not in w.tags:
@@ -141,12 +143,9 @@ class RoadHandler(osmium.SimpleHandler):
 
         if shape.is_valid:
             feature = geojson.Feature(geometry=shapely.geometry.mapping(geometry_buffer))
-            self.features.append(feature)
+            self.storage.add(feature)
         else:
             print("Warning: invalid feature: https://www.openstreetmap.org/way/{}".format(w.id), file=sys.stderr)
 
-    def save(self, out):
-        collection = geojson.FeatureCollection(self.features)
-
-        with open(out, "w") as fp:
-            geojson.dump(collection, fp)
+    def flush(self):
+        self.storage.flush()
