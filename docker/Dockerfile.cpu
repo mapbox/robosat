@@ -15,7 +15,8 @@ ARG TCH=1.1.0
 ARG PY=36
 
 RUN python3 -m pip install http://download.pytorch.org/whl/cpu/torch-${TCH}-cp${PY}-cp${PY}m-linux_x86_64.whl     && \
-    python3 -m pip install -r deps/requirements-lock.txt
+    python3 -m pip install -r deps/requirements-lock.txt                                                          && \
+    python3 -c "from robosat.unet import UNet; UNet(2)"
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
