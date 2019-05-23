@@ -78,36 +78,23 @@ If you want to contribute, see the [contributing section](#contributing) for mor
 
 ## Installation
 
-We provide pre-built Docker images packaging up everything you will need for both CPU as well as GPU environments on Docker Hub under the [mapbox/robosat](https://hub.docker.com/r/mapbox/robosat/tags/) namespace.
-The pre-built GPU Docker images require the [NVIDIA Container Runtime for Docker](https://github.com/NVIDIA/nvidia-docker).
+We provide pre-built Docker images for both CPU as well as GPU environments on Docker Hub in [mapbox/robosat](https://hub.docker.com/r/mapbox/robosat/tags/).
 
-The following describes the installation from scratch.
+Using a CPU container to show all available sub-commands
 
+    docker run -it --rm -v $PWD:/data --ipc=host --network=host mapbox/robosat:latest-cpu --help
 
-- Install native system dependencies required for Python 3 bindings
+Using a GPU container (requires [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) on the host) to train a model
 
-```bash
-apt-get install build-essential libboost-python-dev libexpat1-dev zlib1g-dev libbz2-dev libspatialindex-dev
-```
+    docker run --runtime=nvidia -it --rm -v $PWD:/data --ipc=host mapbox/robosat:latest-gpu train --model /data/model.toml --dataset /data/dataset.toml --workers 4
 
-- Use a virtualenv for installing this project locally
+Arguments
+- `--runtime=nvidia` enables the nvidia-docker runtime for access to host GPUs
+- `--ipc=host`  is required for shared memory communication between workers
+- `--network=host`  is required for network communication in the download tool
+- `-v $PWD:/data` makes the current directory on the host accessible at `/data` in the container
 
-```bash
-python3 -m venv .env
-. .env/bin/activate
-```
-
-- Get the PyTorch wheel for your environment from http://pytorch.org. For example for Python 3.6 and CUDA 10
-
-```bash
-python3 -m pip install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
-```
-
-- Install remaining dependencies
-
-```bash
-python3 -m pip install -r deps/requirements-lock.txt
-```
+For installation from source (requires installing dependencies) see the Dockerfiles in the [`docker/`](docker) directory.
 
 
 ## Usage
