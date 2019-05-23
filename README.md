@@ -199,7 +199,7 @@ Exports a trained model in [ONNX](https://onnx.ai/) format for prediction across
 
 The result of `rs export` is an ONNX GraphProto `.pb` file which can be used with the ONNX ecosystem.
 
-Note: the `rs predict` tool works with `.pth` checkpoints. In contrast to these `.pth` checkpoints the ONNX models neither depent on PyTorch or the Python code for the model class and can be used e.g. in resource constrained environments like AWS Lambda.
+Note: the `rs predict` tool works with `.pth` checkpoints. In contrast to these `.pth` checkpoints the ONNX models neither depend on PyTorch or the Python code for the model class and can be used e.g. in resource constrained environments like AWS Lambda.
 
 
 ### rs predict
