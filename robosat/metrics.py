@@ -63,7 +63,7 @@ class Metrics:
         try:
             iou = self.tp / (self.tp + self.fn + self.fp)
         except ZeroDivisionError:
-            iou = float("Inf")
+            iou = float("NaN")
 
         return iou
 
@@ -79,7 +79,7 @@ class Metrics:
                 (self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn)
             )
         except ZeroDivisionError:
-            mcc = float("Inf")
+            mcc = float("NaN")
 
         return mcc
 
