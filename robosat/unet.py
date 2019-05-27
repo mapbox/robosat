@@ -70,7 +70,7 @@ class DecoderBlock(nn.Module):
           The networks output tensor.
         """
 
-        return self.block(nn.functional.upsample(x, scale_factor=2, mode="nearest"))
+        return self.block(nn.functional.interpolate(x, scale_factor=2, mode="nearest"))
 
 
 class UNet(nn.Module):
