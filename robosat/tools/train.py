@@ -194,8 +194,6 @@ def train(loader, num_classes, device, net, optimizer, criterion):
             prediction = output.detach()
             metrics.add(mask, prediction)
 
-    assert num_samples > 0, "dataset contains training images and labels"
-
     return {
         "loss": running_loss / num_samples,
         "miou": metrics.get_miou(),
@@ -233,8 +231,6 @@ def validate(loader, num_classes, device, net, criterion):
         for mask, output in zip(masks, outputs):
             metrics.add(mask, output)
 
-    assert num_samples > 0, "dataset contains validation images and labels"
-
     return {
         "loss": running_loss / num_samples,
         "miou": metrics.get_miou(),
@@ -271,6 +267,9 @@ def get_dataset_loaders(model, dataset, workers):
     val_dataset = SlippyMapTilesConcatenation(
         [os.path.join(path, "validation", "images")], os.path.join(path, "validation", "labels"), transform
     )
+
+    assert len(train_dataset) > 0, "at least one tile in training dataset"
+    assert len(val_dataset) > 0, "at least one tile in validation dataset"
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=workers)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=workers)

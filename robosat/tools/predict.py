@@ -73,6 +73,8 @@ def main(args):
     transform = Compose([ConvertImageMode(mode="RGB"), ImageToTensor(), Normalize(mean=mean, std=std)])
 
     directory = BufferedSlippyMapDirectory(args.tiles, transform=transform, size=args.tile_size, overlap=args.overlap)
+    assert len(directory) > 0, "at least one tile in dataset"
+
     loader = DataLoader(directory, batch_size=args.batch_size, num_workers=args.workers)
 
     # don't track tensors with autograd during prediction
