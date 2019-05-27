@@ -46,7 +46,12 @@ class Metrics:
         Returns:
           The mean Intersection over Union score for all observations seen so far.
         """
-        return np.nanmean([self.tn / (self.tn + self.fn + self.fp), self.tp / (self.tp + self.fn + self.fp)])
+        try:
+            miou = np.nanmean([self.tn / (self.tn + self.fn + self.fp), self.tp / (self.tp + self.fn + self.fp)])
+        except ZeroDivisionError:
+            miou = float("NaN")
+
+        return miou
 
     def get_fg_iou(self):
         """Retrieves the foreground Intersection over Union score.
