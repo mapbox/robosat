@@ -27,8 +27,5 @@
   # Learning rate for the optimizer.
   lr         = 0.0001
 
-  # Weight decay l2 penalty for the optimizer
-  decay      = 0.0001
-
   # Loss function name (e.g 'Lovasz', 'mIoU' or 'CrossEntropy')
   loss = 'Lovasz'

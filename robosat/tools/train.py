@@ -78,7 +78,7 @@ def main(args):
         if model["opt"]["loss"] in ("CrossEntropy", "mIoU", "Focal"):
             sys.exit("Error: The loss function used, need dataset weights values")
 
-    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"], weight_decay=model["opt"]["decay"])
+    optimizer = Adam(net.parameters(), lr=model["opt"]["lr"])
 
     resume = 0
     if args.checkpoint:
@@ -118,7 +118,6 @@ def main(args):
     log.log("Batch Size:\t {}".format(model["common"]["batch_size"]))
     log.log("Image Size:\t {}".format(model["common"]["image_size"]))
     log.log("Learning Rate:\t {}".format(model["opt"]["lr"]))
-    log.log("Weight Decay:\t {}".format(model["opt"]["decay"]))
     log.log("Loss function:\t {}".format(model["opt"]["loss"]))
     if "weight" in locals():
         log.log("Weights :\t {}".format(dataset["weights"]["values"]))
