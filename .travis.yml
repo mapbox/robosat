@@ -14,7 +14,7 @@ matrix:
       addons:
         apt:
           sources: ['deadsnakes']
-          packages: ['python3.6', 'python3.6-pip', 'python3.6-venv', 'libspatialindex-dev', 'libglib2.0-0']
+          packages: ['python3.6', 'python3.6-venv', 'libspatialindex-dev', 'libglib2.0-0']
 
 before_install:
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -22,16 +22,16 @@ before_install:
   - sudo apt-get update && sudo apt-get -y install docker-ce
   - sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 10
   - python3 -m venv .env && . .env/bin/activate
-  - python -m pip install pip==19.1.1 pip-tools==3.7.0
-  - python -m piptools sync
-  - python -m pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
-  - python -m pip install https://download.pytorch.org/whl/cpu/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
+  - python3 -m pip install pip==19.1.1 pip-tools==3.7.0
+  - python3 -m piptools sync
+  - python3 -m pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+  - python3 -m pip install https://download.pytorch.org/whl/cpu/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
 
 script:
-  - python -m pytest
-  - python -m pip install flake8==3.5.0
+  - python3 -m pytest
+  - python3 -m pip install flake8==3.5.0
   - flake8 robosat
-  - python -m pip install black==18.6b4
+  - python3 -m pip install black==18.6b4
   - black . --exclude .env --check --line-length 120
 
 after_success:
