@@ -1,9 +1,7 @@
-torch
-torchvision
 numpy
 pillow
 scipy
-opencv-contrib-python
+opencv-contrib-python-headless
 tqdm
 flask
 requests
