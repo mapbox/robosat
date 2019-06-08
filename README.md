@@ -45,8 +45,12 @@ RoboSat is an end-to-end pipeline written in Python 3 for feature extraction fro
 Features can be anything visually distinguishable in the imagery for example: buildings, parking lots, roads, or cars.
 
 Have a look at
-- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/44145) where we first introduced RoboSat and show some results.
-- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/44321) where we extract building footprints based on drone imagery in Tanzania.
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/44145) where we first introduced RoboSat and show some results
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/44321) where we extract building footprints based on drone imagery in Tanzania
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/45042) where we summarize the v1.1 release
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/368726) where we summarize the v1.2 release
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/daniel-j-h/diary/368771) where we run robosat v1.2 on aerial imagery for Bavaria, Germany
+- [this OpenStreetMap diary post](https://www.openstreetmap.org/user/maning/diary/44462) where [Maning](https://github.com/maning) runs robosat on imagery from the Philippines
 
 The tools RoboSat comes with can be categorized as follows:
 - data preparation: creating a dataset for training feature extraction models
