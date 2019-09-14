@@ -104,7 +104,7 @@ def contours(mask):
     Note: the hierarchy can be used to re-construct polygons with holes as one entity.
     """
 
-    _, contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return contours, hierarchy
 
 
