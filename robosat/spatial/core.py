@@ -18,9 +18,8 @@ def project(shape, source, target):
       The projected geometry in the target coordinate system.
     """
 
-    project = functools.partial(pyproj.transform, pyproj.Proj(init=source), pyproj.Proj(init=target))
-
-    return shapely.ops.transform(project, shape)
+    transformer = pyproj.Transformer.from_crs(source, target)
+    return shapely.ops.transform(transformer.transform, shape)
 
 
 def union(shapes):
