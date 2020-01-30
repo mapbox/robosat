@@ -23,9 +23,8 @@ setuptools.setup(
         'matplotlib>=3.1',
         'mercantile>=1.0',
         'numpy>=1.16',
-        'opencv-python>=4.0',
-        'opencv-contrib-python>=4.0',
-        'osmium>=2.15',
+        'opencv-contrib-python-headless>=4.0',
+        'osmium>=2.15.2',
         'pillow>=6.0',
         'pyproj>=2.1',
         'rasterio>=1.0',
@@ -38,5 +37,10 @@ setuptools.setup(
         'torch>=1.1',
         'torchvision>=0.3',
         'tqdm>=4.32',
-    ]
+    ],
+    entry_points = {
+        'console_scripts': [
+            'rs=robosat.tools.__main__:main'
+        ]
+    }
 )

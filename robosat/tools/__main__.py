@@ -53,6 +53,11 @@ def add_parsers():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
+    """main entrypoint for robosat tools"""
     args = add_parsers()
     args.func(args)
+
+
+if __name__ == "__main__":
+    main()
