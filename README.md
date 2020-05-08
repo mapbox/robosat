@@ -1,3 +1,6 @@
+**Note: Robosat is neither maintained not actively developed any longer by Mapbox. See [this issue](https://github.com/mapbox/robosat/issues/184).  
+The main developers ([@daniel-j-h](https://github.com/daniel-j-h), [@bkowshik](https://github.com/bkowshik)) are no longer with Mapbox.**
+
 <h1 align='center'>RoboSat</h1>
 
 <p align=center>
