@@ -6,7 +6,7 @@ import geojson
 from tqdm import tqdm
 import shapely.geometry
 
-from robosat.spatial.core import make_index, project, union
+from robosat.spatial.core import make_index, union, project_ea, project_wgs_el, project_el_wgs
 from robosat.graph.core import UndirectedGraph
 
 
@@ -32,20 +32,20 @@ def main(args):
     graph = UndirectedGraph()
     idx = make_index(shapes)
 
-    def buffered(shape):
-        projected = project(shape, "epsg:4326", "epsg:3395")
+    def buffered(shape, args):
+        projected = project_wgs_el(shape)
         buffered = projected.buffer(args.threshold)
-        unprojected = project(buffered, "epsg:3395", "epsg:4326")
+        unprojected = project_el_wgs(buffered)
         return unprojected
-
-    def unbuffered(shape):
-        projected = project(shape, "epsg:4326", "epsg:3395")
+    
+    def unbuffered(shape,args):
+        projected = project_wgs_el(shape)
         unbuffered = projected.buffer(-1 * args.threshold)
-        unprojected = project(unbuffered, "epsg:3395", "epsg:4326")
+        unprojected = project_el_wgs(unbuffered)
         return unprojected
 
     for i, shape in enumerate(tqdm(shapes, desc="Building graph", unit="shapes", ascii=True)):
-        embiggened = buffered(shape)
+        embiggened = buffered(shape, args)
 
         graph.add_edge(i, i)
 
@@ -61,8 +61,8 @@ def main(args):
     features = []
 
     for component in tqdm(components, desc="Merging components", unit="component", ascii=True):
-        embiggened = [buffered(shapes[v]) for v in component]
-        merged = unbuffered(union(embiggened))
+        embiggened = [buffered(shapes[v], args) for v in component]
+        merged = unbuffered(union(embiggened), args)
 
         if merged.is_valid:
             # Orient exterior ring of the polygon in counter-clockwise direction.
@@ -76,7 +76,7 @@ def main(args):
                 continue
 
             # equal-area projection; round to full m^2, we're not that precise anyway
-            area = int(round(project(merged, "epsg:4326", "esri:54009").area))
+            area = int(round(project_ea(merged).area))
 
             feature = geojson.Feature(geometry=shapely.geometry.mapping(merged), properties={"area": area})
             features.append(feature)

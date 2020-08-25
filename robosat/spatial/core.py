@@ -39,6 +39,19 @@ def union(shapes):
 
     return functools.reduce(fn, shapes)
 
+ea_transformer = pyproj.Transformer.from_crs("epsg:4326", "esri:54009") 
+wgs_ellipsoid_transformer = pyproj.Transformer.from_crs("epsg:4326", "epsg:3395")
+ellipsoid_wgs_transformer = pyproj.Transformer.from_crs("epsg:3395", "epsg:4326")
+
+def project_ea(shape):
+    return shapely.ops.transform(ea_transformer.transform, shape)
+
+def project_wgs_el(shape):
+    return shapely.ops.transform(wgs_ellipsoid_transformer.transform, shape)
+
+def project_el_wgs(shape):
+    return shapely.ops.transform(ellipsoid_wgs_transformer.transform, shape)
+
 
 def iou(lhs, rhs):
     """Calculates intersection over union metric between two shapes..
@@ -52,8 +65,8 @@ def iou(lhs, rhs):
     """
 
     # equal-area projection for comparing shape areas
-    lhs = project(lhs, "epsg:4326", "esri:54009")
-    rhs = project(rhs, "epsg:4326", "esri:54009")
+    lhs = project_ea(lhs)
+    rhs = project_ea(rhs)
 
     intersection = lhs.intersection(rhs)
     union = lhs.union(rhs)
