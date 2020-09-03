@@ -14,6 +14,8 @@ import torch.nn as nn
 
 from torchvision.models import resnet50
 
+from robosat.fpa import FeaturePyramidAttention
+
 
 class ConvRelu(nn.Module):
     """3x3 convolution followed by ReLU activation building block.
@@ -96,6 +98,8 @@ class UNet(nn.Module):
         # Access resnet directly in forward pass; do not store refs here due to
         # https://github.com/pytorch/pytorch/issues/8392
 
+        self.fpa = FeaturePyramidAttention(2048, 2048)
+
         self.center = DecoderBlock(2048, num_filters * 8)
 
         self.dec0 = DecoderBlock(2048 + num_filters * 8, num_filters * 8)
@@ -129,7 +133,9 @@ class UNet(nn.Module):
         enc3 = self.resnet.layer3(enc2)
         enc4 = self.resnet.layer4(enc3)
 
-        center = self.center(nn.functional.max_pool2d(enc4, kernel_size=2, stride=2))
+        fpa = self.fpa(enc4)
+
+        center = self.center(nn.functional.max_pool2d(fpa, kernel_size=2, stride=2))
 
         dec0 = self.dec0(torch.cat([enc4, center], dim=1))
         dec1 = self.dec1(torch.cat([enc3, dec0], dim=1))
