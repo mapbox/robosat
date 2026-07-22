@@ -12,7 +12,7 @@ See:
 import torch
 import torch.nn as nn
 
-from torchvision.models import resnet50
+from robosat.efficientnet import efficientnet0
 
 
 class ConvRelu(nn.Module):
@@ -91,17 +91,17 @@ class UNet(nn.Module):
 
         # Todo: make input channels configurable, not hard-coded to three channels for RGB
 
-        self.resnet = resnet50(pretrained=pretrained)
+        self.net = efficientnet0(pretrained=pretrained)
 
-        # Access resnet directly in forward pass; do not store refs here due to
+        # Access backbone directly in forward pass; do not store refs here due to
         # https://github.com/pytorch/pytorch/issues/8392
 
-        self.center = DecoderBlock(2048, num_filters * 8)
+        self.center = DecoderBlock(1280, num_filters * 8)
 
-        self.dec0 = DecoderBlock(2048 + num_filters * 8, num_filters * 8)
-        self.dec1 = DecoderBlock(1024 + num_filters * 8, num_filters * 8)
-        self.dec2 = DecoderBlock(512 + num_filters * 8, num_filters * 2)
-        self.dec3 = DecoderBlock(256 + num_filters * 2, num_filters * 2 * 2)
+        self.dec0 = DecoderBlock(1280 + num_filters * 8, num_filters * 8)
+        self.dec1 = DecoderBlock(112 + num_filters * 8, num_filters * 8)
+        self.dec2 = DecoderBlock(40 + num_filters * 8, num_filters * 2)
+        self.dec3 = DecoderBlock(24 + num_filters * 2, num_filters * 2 * 2)
         self.dec4 = DecoderBlock(num_filters * 2 * 2, num_filters)
         self.dec5 = ConvRelu(num_filters, num_filters)
 
@@ -117,17 +117,33 @@ class UNet(nn.Module):
           The networks output tensor.
         """
         size = x.size()
-        assert size[-1] % 32 == 0 and size[-2] % 32 == 0, "image resolution has to be divisible by 32 for resnet"
+        assert size[-1] % 32 == 0 and size[-2] % 32 == 0, "image resolution has to be divisible by 32 for backbone"
 
-        enc0 = self.resnet.conv1(x)
-        enc0 = self.resnet.bn1(enc0)
-        enc0 = self.resnet.relu(enc0)
-        enc0 = self.resnet.maxpool(enc0)
+        # 1, 3, 512, 512
+        enc0 = self.net.conv1(x)
+        enc0 = self.net.bn1(enc0)
+        enc0 = self.net.relu(enc0)
+        # 1, 32, 256, 256
+        enc0 = self.net.layer1(enc0)
+        # 1, 16, 256, 256
 
-        enc1 = self.resnet.layer1(enc0)
-        enc2 = self.resnet.layer2(enc1)
-        enc3 = self.resnet.layer3(enc2)
-        enc4 = self.resnet.layer4(enc3)
+        enc1 = self.net.layer2(enc0)
+        # 1, 24, 128, 128
+
+        enc2 = self.net.layer3(enc1)
+        # 1, 40, 64, 64
+
+        enc3 = self.net.layer4(enc2)
+        # 1, 80, 32, 32
+        enc3 = self.net.layer5(enc3)
+        # 1, 112, 32, 32
+
+        enc4 = self.net.layer6(enc3)
+        # 1, 192, 16, 16
+        enc4 = self.net.layer7(enc4)
+        # 1, 320, 16, 16
+        enc4 = self.net.features(enc4)
+        # 1, 1280, 16, 16
 
         center = self.center(nn.functional.max_pool2d(enc4, kernel_size=2, stride=2))
 
