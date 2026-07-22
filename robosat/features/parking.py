@@ -5,20 +5,26 @@ import geojson
 
 import shapely.geometry
 
+from robosat.tiles import meters_per_pixel
 from robosat.features.core import denoise, grow, contours, simplify, featurize, parents_in_hierarchy
 
 
 class ParkingHandler:
-    kernel_size_denoise = 20
-    kernel_size_grow = 20
+    kernel_size_denoise_m = 10
+    kernel_size_grow_m = 10
     simplify_threshold = 0.01
 
     def __init__(self):
         self.features = []
 
     def apply(self, tile, mask):
-        if tile.z != 18:
-            raise NotImplementedError("Parking lot post-processing thresholds are tuned for z18")
+        resolution = meters_per_pixel(tile, mask.shape[0])
+
+        kernel_size_denoise_px = round(self.kernel_size_denoise_m / resolution)
+        kernel_size_grow_px = round(self.kernel_size_grow_m / resolution)
+
+        assert kernel_size_denoise_px >= 1, "denoising kernel is at least a single pixel in size"
+        assert kernel_size_grow_px >= 1, "growing kernel is at least a single pixel in size"
 
         # The post-processing pipeline removes noise and fills in smaller holes. We then
         # extract contours, simplify them and transform tile pixels into coordinates.

@@ -46,6 +46,9 @@ def main(args):
         image = np.array(Image.open(path).convert("P"), dtype=np.uint8)
         mask = (image == index).astype(np.uint8)
 
+        h, w = mask.shape[:2]
+        assert h == w
+
         handler.apply(tile, mask)
 
     handler.save(args.out)

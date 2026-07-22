@@ -8,12 +8,36 @@ The Slippy Map tile spec works with a directory structure of `z/x/y.png` where
 See: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 """
 
+import math
 import csv
 import io
 import os
 
 from PIL import Image
 import mercantile
+
+
+def meters_per_pixel(tile, size):
+    """Returns the resolution for a tile.
+
+    Args:
+      tile: the mercantile.tile to calculate the resolution for.
+      size: the size in pixels for this tile (e.g. 256).
+
+    Returns:
+      The resolution in meters per pixel.
+    """
+
+    # https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Resolution_and_Scale
+
+    z = tile.z
+    lat = mercantile.ul(tile).lat
+
+    radius = 6378137
+    mpp = radius * 2 * math.pi / size
+    resolution = mpp * math.cos(math.radians(lat)) / (2 ** z)
+
+    return resolution
 
 
 def pixel_to_location(tile, dx, dy):
