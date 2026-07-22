@@ -14,7 +14,7 @@ from tqdm import tqdm
 from PIL import Image
 
 from robosat.datasets import BufferedSlippyMapDirectory
-from robosat.unet import UNet
+from robosat.fpn import FPNSegmentation
 from robosat.config import load_config
 from robosat.colors import continuous_palette_for_color
 from robosat.transforms import ConvertImageMode, ImageToTensor
@@ -59,8 +59,9 @@ def main(args):
     # https://github.com/pytorch/pytorch/issues/7178
     chkpt = torch.load(args.checkpoint, map_location=map_location)
 
-    net = UNet(num_classes).to(device)
+    net = FPNSegmentation(num_classes)
     net = nn.DataParallel(net)
+    net = net.to(device)
 
     if cuda:
         torch.backends.cudnn.benchmark = True

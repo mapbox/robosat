@@ -5,7 +5,7 @@ import torch.onnx
 import torch.autograd
 
 from robosat.config import load_config
-from robosat.unet import UNet
+from robosat.fpn import FPNSegmentation
 
 
 def add_parser(subparser):
@@ -25,7 +25,7 @@ def main(args):
     dataset = load_config(args.dataset)
 
     num_classes = len(dataset["common"]["classes"])
-    net = UNet(num_classes)
+    net = FPNSegmentation(num_classes)
 
     def map_location(storage, _):
         return storage.cpu()

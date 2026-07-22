@@ -84,6 +84,7 @@ class UNet(nn.Module):
 
         Args:
           num_classes: number of classes to predict.
+          num_filters: the number of filters for the decoder block
           pretrained: use ImageNet pre-trained backbone feature extractor
         """
 
