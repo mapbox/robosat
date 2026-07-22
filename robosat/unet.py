@@ -14,6 +14,8 @@ import torch.nn as nn
 
 from torchvision.models import resnet50
 
+from robosat.scse import SpatialChannelSqChannelEx
+
 
 class ConvRelu(nn.Module):
     """3x3 convolution followed by ReLU activation building block.
@@ -91,10 +93,23 @@ class UNet(nn.Module):
 
         # Todo: make input channels configurable, not hard-coded to three channels for RGB
 
-        self.resnet = resnet50(pretrained=pretrained)
-
         # Access resnet directly in forward pass; do not store refs here due to
         # https://github.com/pytorch/pytorch/issues/8392
+        self.resnet = resnet50(pretrained=pretrained)
+
+        # seSE blocks to append to encoder and decoder as recommended by
+        # https://arxiv.org/abs/1803.02579
+        self.scse0 = SpatialChannelSqChannelEx(64)
+        self.scse1 = SpatialChannelSqChannelEx(256)
+        self.scse2 = SpatialChannelSqChannelEx(512)
+        self.scse3 = SpatialChannelSqChannelEx(1024)
+        self.scse4 = SpatialChannelSqChannelEx(2048)
+
+        self.scse5 = SpatialChannelSqChannelEx(num_filters * 8)
+        self.scse6 = SpatialChannelSqChannelEx(num_filters * 8)
+        self.scse7 = SpatialChannelSqChannelEx(num_filters * 2)
+        self.scse8 = SpatialChannelSqChannelEx(num_filters * 2 * 2)
+        self.scse9 = SpatialChannelSqChannelEx(num_filters)
 
         self.center = DecoderBlock(2048, num_filters * 8)
 
@@ -122,20 +137,21 @@ class UNet(nn.Module):
         enc0 = self.resnet.conv1(x)
         enc0 = self.resnet.bn1(enc0)
         enc0 = self.resnet.relu(enc0)
+        enc0 = self.scse0(enc0)
         enc0 = self.resnet.maxpool(enc0)
 
-        enc1 = self.resnet.layer1(enc0)
-        enc2 = self.resnet.layer2(enc1)
-        enc3 = self.resnet.layer3(enc2)
-        enc4 = self.resnet.layer4(enc3)
+        enc1 = self.scse1(self.resnet.layer1(enc0))
+        enc2 = self.scse2(self.resnet.layer2(enc1))
+        enc3 = self.scse3(self.resnet.layer3(enc2))
+        enc4 = self.scse4(self.resnet.layer4(enc3))
 
         center = self.center(nn.functional.max_pool2d(enc4, kernel_size=2, stride=2))
 
-        dec0 = self.dec0(torch.cat([enc4, center], dim=1))
-        dec1 = self.dec1(torch.cat([enc3, dec0], dim=1))
-        dec2 = self.dec2(torch.cat([enc2, dec1], dim=1))
-        dec3 = self.dec3(torch.cat([enc1, dec2], dim=1))
-        dec4 = self.dec4(dec3)
+        dec0 = self.scse5(self.dec0(torch.cat([enc4, center], dim=1)))
+        dec1 = self.scse6(self.dec1(torch.cat([enc3, dec0], dim=1)))
+        dec2 = self.scse7(self.dec2(torch.cat([enc2, dec1], dim=1)))
+        dec3 = self.scse8(self.dec3(torch.cat([enc1, dec2], dim=1)))
+        dec4 = self.scse9(self.dec4(dec3))
         dec5 = self.dec5(dec4)
 
         return self.final(dec5)
