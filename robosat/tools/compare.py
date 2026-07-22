@@ -17,7 +17,7 @@ def add_parser(subparser):
     parser.add_argument("out", type=str, help="directory to save visualizations to")
     parser.add_argument("images", type=str, help="directory to read slippy map images from")
     parser.add_argument("labels", type=str, help="directory to read slippy map labels from")
-    parser.add_argument("masks", type=str, nargs="+", help="slippy map directories to read masks from")
+    parser.add_argument("masks", type=str, nargs="*", help="slippy map directories to read masks from")
     parser.add_argument("--minimum", type=float, default=0.0, help="minimum percentage of mask not background")
     parser.add_argument("--maximum", type=float, default=1.0, help="maximum percentage of mask not background")
 
@@ -48,7 +48,7 @@ def main(args):
             if percentage >= args.minimum and percentage <= args.maximum:
                 keep = True
 
-        if not keep:
+        if args.masks and not keep:
             continue
 
         width, height = image.size
